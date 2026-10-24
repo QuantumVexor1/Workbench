@@ -9,7 +9,7 @@ From precision calculations and financial tracking to data organization and time
 🚀 Quick Start
 To run Workbench, no complex installation is required:
 
-Download the index.html file from this repository.
+Download the .html file from this repository.
 Open the file in any modern web browser (Chrome, Firefox, Edge, etc.).
 Start using the tools immediately!
 
@@ -63,7 +63,7 @@ Von Präzisionsrechnungen und Finanztracking bis hin zu Datenorganisation und Ze
 🚀 Schnellstart
 Um Workbench zu starten, ist keine komplexe Installation erforderlich:
 
-Lade die index.html Datei aus diesem Repository herunter.
+Lade die .html Datei aus diesem Repository herunter.
 Öffne die Datei in einem modernen Webbrowser (Chrome, Firefox, Edge usw.).
 Fang direkt an!
 
