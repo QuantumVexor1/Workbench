@@ -44,8 +44,11 @@ Localization: Multi-language support (English & German).
 This project is licensed under the MIT License.
 
 👤 Credits
+
 Creator: QuantumVexor1
+
 Year: 2026
+
 Generation: 99.9% AI Generated
 
 
@@ -95,6 +98,9 @@ Lokalisierung: Mehrsprachige Unterstützung (Englisch & Deutsch).
 Dieses Projekt ist unter der MIT-Lizenz lizenziert.
 
 👤 Credits
+
 Ersteller: QuantumVexor1
+
 Jahr: 2026
+
 Generation: 99.9% KI-generiert
