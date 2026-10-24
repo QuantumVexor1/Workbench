@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workbench v2.0</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        :root {
+            --bg-dark: #0f172a;
+            --glass-bg: rgba(30, 41, 59, 0.8);
+            --accent: #3b82f6;
+            --border: rgba(255,255,255,0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-dark);
+            color: #f1f5f9;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+        }
+
+        .active-tab {
+            background: rgba(59, 130, 246, 0.2);
+            border-left: 4px solid var(--accent);
+            color: white;
+        }
+
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: #1e293b; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+
+        .hidden-section { display: none; }
+
+        .excel-grid {
+            display: grid;
+            grid-template-columns: 50px repeat(var(--cols, 10), minmax(100px, 1fr));
+            border: 1px solid var(--border);
+            overflow: auto;
+            max-height: 60vh;
+            background: #0f172a;
+        }
+        .cell {
+            border: 0.5px solid var(--border);
+            padding: 6px;
+            min-height: 32px;
+            outline: none;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            position: relative;
+        }
+        .cell:focus { border: 2px solid var(--accent); z-index: 10; background: rgba(59, 130, 246, 0.1); }
+        .header-cell {
+            background: #1e293b;
+            text-align: center;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            border: 0.5px solid var(--border);
+        }
+
+        .nav-btn { transition: all 0.2s ease; }
+        .nav-btn:hover { transform: translateX(5px); background: rgba(255,255,255,0.05); }
+
+        .calendar-day {
+            aspect-ratio: 1 / 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+        .calendar-day:hover { background-color: var(--accent); transform: scale(1.05); }
+        .weekday-header {
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+        }
+
+        .time-label {
+            font-size: 0.65rem;
+            color: #94a3b8;
+            margin-top: -2px;
+            display: block;
+        }
+
+        #context-menu {
+            position: fixed;
+            background: #1e293b;
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 8px;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            display: none;
+        }
+        #context-menu button {
+            padding: 6px 12px;
+            margin: 2px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            cursor: pointer;
+        }
+        #context-menu button:hover { background: var(--accent); }
+    </style>
+</head>
+<body class="flex">
+
+    <!-- Context Menu -->
+    <div id="context-menu">
+        <button onclick="app.formatCell('bold')">B</button>
+        <button onclick="app.formatCell('italic')">I</button>
+        <button onclick="app.formatCell('underline')">U</button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-72 glass h-full flex flex-col p-6 z-50">
+        <div class="flex items-center gap-3 mb-12">
+            <div class="bg-blue-600 p-2 rounded-xl">
+                <!-- 3D Cube Crafting Table Style Icon -->
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="cubeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" style="stop-color:#3b82f6"/>
+                            <stop offset="100%" style="stop-color:#1e40af"/>
+                        </linearGradient>
+                    </defs>
+                    <!-- Side 1 -->
+                    <path d="M4 4H28V24H4V4Z" fill="url(#cubeGrad)"/>
+                    <!-- Side 2 -->
+                    <path d="M4 4H12V12H4V4Z" fill="#1e3a8a"/>
+                    <!-- Side 3 -->
+                    <path d="M20 4H28V12H20V4Z" fill="#1e3a8a"/>
+                    <!-- Front Face Details (Grid) -->
+                    <path d="M6 6H10V10H6V6Z M14 6H18V10H14V6Z M22 6H26V10H22V6Z" fill="white" fill-opacity="0.2"/>
+                    <path d="M6 14H10V18H6V14Z M14 14H18V18H14V14Z M22 14H26V18H22V14Z" fill="white" fill-opacity="0.2"/>
+                    <path d="M6 22H10V26H6V22Z M14 22H18V26H14V22Z M22 22H26V26H22V22Z" fill="white" fill-opacity="0.2"/>
+                </svg>
+            </div>
+            <h1 class="text-2xl font-extrabold tracking-tighter">WORKBENCH <span class="text-xs font-light text-blue-400">v2.0</span></h1>
+        </div>
+
+        <nav class="flex-1 space-y-2">
+            <button onclick="app.showSection('calc')" class="nav-btn w-full flex flex-col items-start p-4 rounded-xl active-tab" id="btn-calc">
+                <div class="flex items-center gap-4"><i data-lucide="calculator"></i><span data-i18n="nav_calc">Rechenwerkzeug</span></div>
+                <span class="text-[10px] text-slate-400" data-i18n="desc_calc">Präzise Berechnungen</span>
+            </button>
+            <button onclick="app.showSection('calendar')" class="nav-btn w-full flex flex-col items-start p-4 rounded-xl" id="btn-calendar">
+                <div class="flex items-center gap-4"><i data-lucide="calendar"></i><span data-i18n="nav_calendar">Kalender</span></div>
+                <span class="text-[10px] text-slate-400" data-i18n="desc_calendar">Termine verwalten</span>
+            </button>
+            <button onclick="app.showSection('table')" class="nav-btn w-full flex flex-col items-start p-4 rounded-xl" id="btn-table">
+                <div class="flex items-center gap-4"><i data-lucide="table"></i><span data-i18n="nav_table">Tabelle</span></div>
+                <span class="text-[10px] text-slate-400" data-i18n="desc_table">Daten strukturieren</span>
+            </button>
+            <button onclick="app.showSection('finance')" class="nav-btn w-full flex flex-col items-start p-4 rounded-xl" id="btn-finance">
+                <div class="flex items-center gap-4"><i data-lucide="trending-up"></i><span data-i18n="nav_finance">Finanzen</span></div>
+                <span class="text-[10px] text-slate-400" data-i18n="desc_finance">Geld verwalten</span>
+            </button>
+            <button onclick="app.showSection('todo')" class="nav-btn w-full flex flex-col items-start p-4 rounded-xl" id="btn-todo">
+                <div class="flex items-center gap-4"><i data-lucide="check-square"></i><span data-i18n="nav_todo">Aufgaben</span></div>
+                <span class="text-[10px] text-slate-400" data-i18n="desc_todo">Aufgaben verwalten</span>
+            </button>
+            <button onclick="app.showSection('time')" class="nav-btn w-full flex flex-col items-start p-4 rounded-xl" id="btn-time">
+                <div class="flex items-center gap-4"><i data-lucide="clock"></i><span data-i18n="nav_time">Zeitverwaltung</span></div>
+                <span class="text-[10px] text-slate-400" data-i18n="desc_time">Zeit messen</span>
+            </button>
+        </nav>
+
+        <div class="mt-auto pt-6 border-t border-white/10">
+            <div class="flex items-center gap-2 mb-4">
+                <button onclick="app.setLanguage('en')" class="p-1 bg-slate-700 rounded text-xs">EN</button>
+                <button onclick="app.setLanguage('de')" class="p-1 bg-slate-700 rounded text-xs">DE</button>
+            </div>
+            <button onclick="app.openTrash()" class="w-full flex items-center justify-center gap-2 p-3 bg-red-900/20 text-red-400 rounded-xl border border-red-900/30 hover:bg-red-900/40">
+                <i data-lucide="trash-2" class="w-4"></i><span data-i18n="trash_btn">Daten löschen</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Workspace -->
+    <main class="flex-1 overflow-y-auto custom-scroll p-10 relative">
+
+        <!-- Section: Calc -->
+        <section id="calc" class="section space-y-8">
+            <div class="flex justify-between items-end">
+                <div><h2 class="text-4xl font-bold" data-i18n="title_calc">Rechenwerkzeug</h2><p class="text-slate-400" data-i18n="subtitle_calc">Präzisionsrechner & Umrechner</p></div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="glass p-8 rounded-3xl lg:col-span-2">
+                    <h3 class="text-xl font-bold mb-6 text-blue-400" data-i18n="sub_converter">Umrechner</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+                        <div class="space-y-4">
+                            <div class="flex gap-2">
+                                <input type="number" id="conv-val" class="w-full text-2xl p-4 rounded-xl bg-slate-900 border border-white/10" placeholder="0.00">
+                                <select id="conv-from" class="w-1/3 p-4 rounded-xl bg-slate-900 border border-white/10"></select>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <select id="conv-cat" class="w-full p-4 rounded-xl bg-slate-900 border border-white/10" onchange="app.updateConvUnits()">
+                                <option value="length">Länge</option>
+                                <option value="weight">Gewicht</option>
+                                <option value="volume">Volumen</option>
+                                <option value="speed">Geschwindigkeit</option>
+                                <option value="temp">Temperatur</option>
+                                <option value="currency">Währung</option>
+                            </select>
+                            <select id="conv-to" class="w-full p-4 rounded-xl bg-slate-900 border border-white/10"></select>
+                        </div>
+                        <div class="space-y-4">
+                            <button onclick="app.performConvert()" class="w-full bg-blue-600 p-4 rounded-xl font-bold hover:bg-blue-700" data-i18n="btn_convert">Umrechnen</button>
+                            <div id="conv-res" class="text-3xl font-bold text-blue-400 p-4 bg-slate-900 rounded-xl text-center border border-blue-500/30">0.00</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass p-6 rounded-3xl">
+                    <h3 class="text-xl mb-6 font-bold text-green-400" data-i18n="sub_extra">Zusatzfunktionen</h3>
+                    <div class="space-y-6">
+                        <div class="p-4 bg-slate-900/50 rounded-xl">
+                            <p class="text-xs text-slate-400 mb-2" data-i18n="tool_curr">Währung</p>
+                            <div class="flex gap-2">
+                                <input type="number" id="curr-val" class="w-1/2 p-2 rounded bg-slate-800" placeholder="Summe">
+                                <input type="number" id="curr-rate" class="w-1/4 p-2 rounded bg-slate-800" placeholder="Kurs">
+                            </div>
+                            <button onclick="app.calcCurr()" class="mt-2 w-full bg-slate-700 p-2 rounded text-sm" data-i18n="btn_convert">Berechnen</button>
+                            <div id="curr-res" class="text-right font-bold mt-1 text-blue-400">0.00</div>
+                        </div>
+                        <div class="p-4 bg-slate-900/50 rounded-xl">
+                            <p class="text-xs text-slate-400 mb-2" data-i18n="tool_split">Split-Rechner</p>
+                            <div class="flex gap-2">
+                                <input type="number" id="tip-total" class="w-1/2 p-2 rounded bg-slate-800" placeholder="Summe">
+                                <input type="number" id="tip-perc" class="w-1/4 p-2 rounded bg-slate-800" placeholder="%">
+                            </div>
+                            <button onclick="app.calcTip()" class="mt-2 w-full bg-slate-700 p-2 rounded text-sm" data-i18n="btn_convert">Berechnen</button>
+                            <div id="tip-res" class="text-right font-bold mt-1 text-blue-400">0.00</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="glass p-6 rounded-3xl">
+                        <h3 class="text-xl mb-4 font-bold">Basis Rechner</h3>
+                        <input type="text" id="basic-display" readonly class="w-full bg-slate-950 p-4 text-right text-4xl mb-4 rounded-2xl border border-slate-700 font-mono">
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="app.clearCalc('basic')" class="p-4 bg-red-900/30 rounded-xl font-bold">C</button>
+                            <button onclick="app.appendBasic('/')" class="p-4 bg-slate-700 rounded-xl font-bold">/</button>
+                            <button onclick="app.appendBasic('*')" class="p-4 bg-slate-700 rounded-xl font-bold">*</button>
+                            <button onclick="app.appendBasic('-')" class="p-4 bg-slate-700 rounded-xl font-bold">-</button>
+                            <script>for(let i=1;i<=9;i++) document.write(`<button onclick="app.appendBasic('${i}')" class="p-4 bg-slate-800 rounded-xl font-bold">${i}</button>`)</script>
+                            <button onclick="app.appendBasic('.')" class="p-4 bg-slate-800 rounded-xl font-bold">.</button>
+                            <button onclick="app.appendBasic('+')" class="p-4 bg-slate-700 rounded-xl font-bold">+</button>
+                            <button onclick="app.calculateBasic()" class="p-4 bg-blue-600 rounded-xl font-bold">=</button>
+                        </div>
+                    </div>
+                    <div class="glass p-6 rounded-3xl">
+                        <h3 class="text-xl mb-4 font-bold">Wissenschaftlich</h3>
+                        <input type="text" id="sci-display" readonly class="w-full bg-slate-950 p-4 text-right text-3xl mb-4 rounded-2xl border border-slate-700 font-mono">
+                        <div class="grid grid-cols-4 gap-2">
+                            <button onclick="app.sciOp('sin')" class="p-3 bg-slate-800 rounded-xl text-xs">SIN</button>
+                            <button onclick="app.sciOp('cos')" class="p-3 bg-slate-800 rounded-xl text-xs">COS</button>
+                            <button onclick="app.sciOp('tan')" class="p-3 bg-slate-800 rounded-xl text-xs">TAN</button>
+                            <button onclick="app.sciOp('sqrt')" class="p-3 bg-slate-800 rounded-xl text-xs">√</button>
+                            <button onclick="app.sciOp('log')" class="p-3 bg-slate-800 rounded-xl text-xs">LOG</button>
+                            <button onclick="app.sciOp('pow')" class="p-3 bg-slate-800 rounded-xl text-xs">X²</button>
+                            <button onclick="app.sciOp('pi')" class="p-3 bg-slate-800 rounded-xl text-xs">π</button>
+                            <button onclick="app.sciOp('exp')" class="p-3 bg-slate-800 rounded-xl text-xs">EXP</button>
+                            <script>for(let i=1;i<=9;i++) document.write(`<button onclick="app.appendSci('${i}')" class="p-3 bg-slate-800 rounded-xl font-bold">${i}</button>`)</script>
+                            <button onclick="app.clearCalc('sci')" class="p-3 bg-red-900/30 rounded-xl font-bold">C</button>
+                            <button onclick="app.appendSci('.')" class="p-3 bg-slate-800 rounded-xl font-bold">.</button>
+                            <button onclick="app.calculateSci()" class="p-3 bg-purple-600 rounded-xl font-bold">=</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Kalender -->
+        <section id="calendar" class="section hidden-section space-y-8">
+            <div class="flex justify-between items-center">
+                <h2 class="text-4xl font-bold">Kalender</h2>
+                <div class="flex items-center gap-4">
+                    <button onclick="app.changeMonth(-1)" class="p-3 glass rounded-xl hover:bg-blue-600 transition"><i data-lucide="chevron-left"></i></button>
+                    <div id="calendar-nav" class="text-xl font-bold text-blue-400"></div>
+                    <button onclick="app.changeMonth(1)" class="p-3 glass rounded-xl hover:bg-blue-600 transition"><i data-lucide="chevron-right"></i></button>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div class="glass p-8 rounded-3xl">
+                    <h3 class="mb-4 font-bold" data-i18n="cal_jump">Datum springen</h3>
+                    <div class="space-y-4">
+                        <select id="cal-year-sel" class="w-full p-3 rounded-lg bg-slate-900 border border-white/10"></select>
+                        <select id="cal-month-sel" class="w-full p-3 rounded-lg bg-slate-900 border border-white/10"></select>
+                        <button onclick="app.renderCalendar()" class="w-full bg-blue-600 p-3 rounded-lg font-bold" data-i18n="btn_go">Bestätigen</button>
+                    </div>
+                </div>
+                <div class="lg:col-span-3 glass p-8 rounded-3xl">
+                    <div id="calendar-grid" class="grid grid-cols-7 gap-1"></div>
+                </div>
+            </div>
+            <div class="glass p-8 rounded-3xl">
+                <h3 class="mb-4 font-bold text-blue-400" data-i18n="terminliste">Terminliste</h3>
+                <div class="max-h-64 overflow-y-auto custom-scroll">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="sticky top-0 bg-slate-800">
+                            <tr class="border-b border-white/10">
+                                <th class="py-2" data-i18n="datum">Datum</th>
+                                <th class="py-2" data-i18n="termin">Termin</th>
+                                <th class="py-2 text-right" data-i18n="aktionen">Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="event-list-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Tabelle -->
+        <section id="table" class="section hidden-section space-y-8">
+            <div class="flex justify-between items-center">
+                <h2 class="text-4xl font-bold">Tabelle</h2>
+                <div class="flex gap-4">
+                    <button onclick="app.addNewTable()" class="bg-blue-600 px-4 py-2 rounded-lg font-bold" data-i18n="neue tabelle">+ Neue Tabelle</button>
+                    <button onclick="app.exportExcel()" class="bg-green-600 px-4 py-2 rounded-lg font-bold">Export CSV</button>
+                </div>
+            </div>
+            <div class="glass p-6 rounded-3xl">
+                <div id="table-tabs" class="flex gap-2 mb-4 overflow-x-auto pb-2 items-center"></div>
+                <div class="flex gap-4 mb-2">
+                    <button onclick="app.addColumns()" class="bg-slate-700 px-3 py-1 rounded text-xs" data-i18n="spalten">+ Spalten (A-Z)</button>
+                    <button onclick="app.addRow()" class="bg-slate-700 px-3 py-1 rounded text-xs" data-i18n="zeilen">+ Zeilen</button>
+                </div>
+                <div class="overflow-auto custom-scroll max-h-[60vh]">
+                    <div id="excel-container" class="excel-grid"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Finanzen -->
+        <section id="finance" class="section hidden-section space-y-8">
+            <h2 class="text-4xl font-bold" data-i18n="title_finance">Finanzen</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div class="lg:col-span-1 space-y-4">
+                    <div class="glass p-6 rounded-3xl">
+                        <h3 class="mb-4 font-bold text-blue-400" data-i18n="fin_add">Eintrag</h3>
+                        <input type="text" id="fin-label" placeholder="Bezeichnung" class="w-full p-3 rounded-lg bg-slate-900 mb-3">
+                        <input type="number" id="fin-value" placeholder="Betrag" class="w-full p-3 rounded-lg bg-slate-900 mb-3">
+                        <select id="fin-type" class="w-full p-3 rounded-lg bg-slate-900 mb-3">
+                            <option value="income" data-i18n="fin_type_inc">Einnahme (+)</option>
+                            <option value="expense" data-i18n="fin_type_exp">Ausgabe (-)</option>
+                        </select>
+                        <input type="datetime-local" id="fin-date" class="w-full p-3 rounded-lg bg-slate-900 mb-3">
+                        <button onclick="app.addFinance()" class="w-full bg-blue-600 p-3 rounded-lg font-bold" data-i18n="save">Speichern</button>
+                    </div>
+                    <div class="glass p-6 rounded-3xl">
+                        <div class="text-sm text-slate-400" data-i18n="fin_total">Gesamtbilanz</div>
+                        <div id="fin-summary" class="text-3xl font-mono text-green-400">0.00 €</div>
+                    </div>
+                </div>
+                <div class="lg:col-span-3 glass p-8 rounded-3xl">
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section: Todo -->
+        <section id="todo" class="section hidden-section space-y-8">
+            <h2 class="text-4xl font-bold" data-i18n="title_todo">Aufgabenverwaltung</h2>
+            <div class="glass p-8 rounded-3xl">
+                <div class="flex gap-4 mb-6">
+                    <input type="text" id="todo-input" class="flex-1 p-4 rounded-xl bg-slate-900 border border-white/10" placeholder="..." data-i18n="neue_aufgabe">
+                    <button onclick="app.addTodo()" class="bg-blue-600 px-8 rounded-xl font-bold" data-i18n="hinzufügen">Hinzufügen</button>
+                </div>
+                <div id="todo-list" class="space-y-3"></div>
+            </div>
+        </section>
+
+        <!-- Section: Zeit -->
+        <section id="time" class="section hidden-section space-y-8">
+            <h2 class="text-4xl font-bold" data-i18n="title_time">Zeitverwaltung</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Stopuhr -->
+                <div class="glass p-8 rounded-3xl text-center flex flex-col justify-center">
+                    <h3 class="text-xl font-bold mb-4 text-blue-400" data-i18n="stopwatch_label">Stopuhr</h3>
+                    <div class="mb-6">
+                        <div id="stopwatch-display" class="text-6xl font-mono mb-4">00.00.00.00</div>
+                        <div class="flex justify-center gap-4">
+                            <span class="time-label">h</span>
+                            <span class="time-label">min</span>
+                            <span class="time-label">sec</span>
+                            <span class="time-label">ms</span>
+                        </div>
+                    </div>
+                    <div class="flex justify-center gap-4">
+                        <button onclick="app.toggleStopwatch()" id="sw-btn" class="bg-green-600 px-6 py-2 rounded-xl font-bold">Start</button>
+                        <button onclick="app.resetStopwatch()" class="bg-red-600 px-6 py-2 rounded-xl font-bold">Reset</button>
+                    </div>
+                </div>
+                <!-- Timer -->
+                <div class="glass p-8 rounded-3xl text-center flex flex-col justify-center">
+                    <h3 class="text-xl font-bold mb-4 text-purple-400" data-i18n="timer_label">Timer</h3>
+                    <div class="grid grid-cols-4 gap-2 mb-6">
+                        <div class="relative">
+                            <input type="number" id="timer-h" class="w-full p-2 rounded bg-slate-900 text-center" placeholder="00">
+                            <span class="absolute right-1 top-2 text-[8px] text-slate-500">H</span>
+                        </div>
+                        <div class="relative">
+                            <input type="number" id="timer-m" class="w-full p-2 rounded bg-slate-900 text-center" placeholder="00">
+                            <span class="absolute right-1 top-2 text-[8px] text-slate-500">M</span>
+                        </div>
+                        <div class="relative">
+                            <input type="number" id="timer-s" class="w-full p-2 rounded bg-slate-900 text-center" placeholder="00">
+                            <span class="absolute right-1 top-2 text-[8px] text-slate-500">S</span>
+                        </div>
+                        <div class="relative">
+                            <input type="number" id="timer-ms" class="w-full p-2 rounded bg-slate-900 text-center" placeholder="00">
+                            <span class="absolute right-1 top-2 text-[8px] text-slate-500">ms</span>
+                        </div>
+                    </div>
+                    <div id="timer-display" class="text-6xl font-mono mb-6">00:00.00</div>
+                    <div class="flex gap-2 justify-center">
+                        <button onclick="app.startTimer()" class="bg-blue-600 px-6 py-2 rounded-xl font-bold">Start</button>
+                        <button onclick="app.stopTimer()" class="bg-orange-600 px-6 py-2 rounded-xl font-bold">Stop</button>
+                        <button onclick="app.resetTimer()" class="bg-red-600 px-6 py-2 rounded-xl font-bold">Reset</button>
+                    </div>
+                </div>
+                <!-- Zeitzonen -->
+                <div class="glass p-8 rounded-3xl">
+                    <h3 class="text-xl font-bold mb-4 text-yellow-400" data-i18n="tz_title">Zeitzonen-Vergleich</h3>
+                    <div class="space-y-3">
+                        <div class="grid grid-cols-3 gap-1">
+                            <!-- Visual Hubs (Selected via JS) -->
+                            <button onclick="app.selectTZ(1)" class="p-1 text-[9px] bg-slate-800 rounded hover:bg-blue-600">NY (-5)</button>
+                            <button onclick="app.selectTZ(2)" class="p-1 text-[9px] bg-slate-800 rounded hover:bg-blue-600">LDN (0)</button>
+                            <button onclick="app.selectTZ(3)" class="p-1 text-[9px] bg-slate-800 rounded hover:bg-blue-600">BER (+1)</button>
+                            <button onclick="app.selectTZ(4)" class="p-1 text-[9px] bg-slate-800 rounded hover:bg-blue-600">DXB (+4)</button>
+                            <button onclick="app.selectTZ(5)" class="p-1 text-[9px] bg-slate-800 rounded hover:bg-blue-600">TOK (+9)</button>
+                            <button onclick="app.selectTZ(6)" class="p-1 text-[9px] bg-slate-800 rounded hover:bg-blue-600">SYD (+10)</button>
+                        </div>
+                        <div class="pt-2 space-y-2">
+                            <select id="tz-1" class="w-full p-2 rounded bg-slate-900 text-sm"></select>
+                            <select id="tz-2" class="w-full p-2 rounded bg-slate-900 text-sm"></select>
+                            <button onclick="app.calcTimezoneDiff()" class="w-full bg-slate-700 p-2 rounded text-sm font-bold" data-i18n="tz_res">Differenz berechnen</button>
+                            <div id="tz-res" class="p-3 bg-slate-900 rounded text-center font-bold text-blue-400">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="glass p-8 rounded-3xl">
+                <h3 class="mb-4 font-bold" data-i18n="dur_desc">Dauerrechner</h3>
+                <p class="text-xs text-slate-400 mb-4">Berechnet die exakte Differenz zwischen zwei Uhrzeiten.</p>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="time" id="time-start" class="p-3 rounded bg-slate-900">
+                    <input type="time" id="time-end" class="p-3 rounded bg-slate-900">
+                    <button onclick="app.calcDuration()" class="bg-blue-600 p-3 rounded font-bold" data-i18n="btn_convert">Berechnen</button>
+                    <div id="duration-res" class="font-bold text-xl flex items-center justify-center">--</div>
+                </div>
+            </div>
+        </section>
+
+        <footer class="mt-10 mb-4 text-left text-slate-600 text-xs">
+            QuantumVexor1, 2026
+        </footer>
+
+    </main>
+
+    <!-- Modal Trash -->
+    <div id="trash-modal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center z-[100]">
+        <div class="glass p-8 rounded-3xl max-w-md w-full">
+            <h2 class="text-2xl font-bold mb-6" data-i18n="trash_btn">Daten löschen</h2>
+            <div class="space-y-4">
+                <label class="flex items-center gap-3"><input type="checkbox" id="del-fin" class="w-5 h-5"> Finanzen löschen</label>
+                <label class="flex items-center gap-3"><input type="checkbox" id="del-cal" class="w-5 h-5"> Kalender löschen</label>
+                <label class="flex items-center gap-3"><input type="checkbox" id="del-todo" class="w-5 h-5"> Aufgaben löschen</label>
+                <label class="flex items-center gap-3"><input type="checkbox" id="del-table" class="w-5 h-5"> Tabellen löschen</label>
+            </div>
+            <div class="flex gap-4 mt-8">
+                <button onclick="app.closeTrash()" class="flex-1 bg-slate-700 p-3 rounded-xl">Abbrechen</button>
+                <button onclick="app.confirmDelete()" id="trash-confirm-btn" class="flex-1 bg-red-600 p-3 rounded-xl font-bold" disabled>Löschen</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const app = {
+            translations: {
+                de: {
+                    nav_calc: "Rechenwerkzeug", nav_calendar: "Kalender", nav_table: "Tabelle", nav_finance: "Finanzen", nav_todo: "Aufgaben", nav_time: "Zeitverwaltung",
+                    title_calc: "Rechenwerkzeug", subtitle_calc: "Präzisionsrechner & Umrechner", sub_converter: "Umrechner", conv_input: "Wert", conv_cat: "Kategorie", conv_from: "Von", conv_to: "Zu", conv_res: "Ergebnis", btn_convert: "Umrechnen",
+                    sub_extra: "Zusatzfunktionen", tool_curr: "Währung", tool_split: "Split-Rechner",
+                    title_calendar: "Kalender", cal_jump: "Datum springen", btn_go: "Bestätigen",
+                    title_table: "Tabelle", table_hint: "Tippe in Zellen.",
+                    title_finance: "Finanzen", fin_add: "Eintrag", fin_total: "Gesamtbilanz", fin_type_inc: "Einnahme (+)", fin_type_exp: "Ausgabe (-)", save: "Speichern",
+                    title_todo: "Aufgabenverwaltung", neue_aufgabe: "Neue Aufgabe", hinzufügen: "Hinzufügen",
+                    title_time: "Zeitverwaltung", dur_desc: "Dauerrechner", tz_title: "Zeitzonen-Vergleich", tz_res: "Differenz",
+                    stopwatch_label: "Stopuhr", timer_label: "Timer", bold: "Fett", italic: "Kursiv", underline: "Unterstrichen",
+                    trash_btn: "Daten löschen", desc_calc: "Präzise Berechnungen", desc_calendar: "Termine verwalten", desc_table: "Daten strukturieren", desc_finance: "Geld verwalten", desc_todo: "Aufgaben verwalten", desc_time: "Zeit messen"
+                },
+                en: {
+                    nav_calc: "Calculator", nav_calendar: "Calendar", nav_table: "Table", nav_finance: "Finance", nav_todo: "Tasks", nav_time: "Time Mgmt",
+                    title_calc: "Calculator Suite", subtitle_calc: "Precision Tools", sub_converter: "Converter", conv_input: "Value", conv_cat: "Category", conv_from: "From", conv_to: "To", conv_res: "Result", btn_convert: "Convert",
+                    sub_extra: "Extra Tools", tool_curr: "Currency", tool_split: "Split Calculator",
+                    title_calendar: "Calendar", cal_jump: "Jump to Date", btn_go: "Confirm",
+                    title_table: "Table", table_hint: "Type in cells.",
+                    title_finance: "Finance", fin_add: "Entry", fin_total: "Total Balance", fin_type_inc: "Income (+)", fin_type_exp: "Expense (-)", save: "Save",
+                    title_todo: "Task Management", neue_aufgabe: "New Task", hinzufügen: "Add",
+                    title_time: "Time Management", dur_desc: "Duration Calculator", tz_title: "Timezone Comparison", tz_res: "Difference",
+                    stopwatch_label: "Stopwatch", timer_label: "Timer", bold: "Bold", italic: "Italic", underline: "Underline",
+                    trash_btn: "Delete Data", desc_calc: "Precision Tools", desc_calendar: "Manage Events", desc_table: "Structure Data", desc_finance: "Manage Money", desc_todo: "Task Management", desc_time: "Measure Time"
+                }
+            },
+            currentLang: 'en',
+            tableData: JSON.parse(localStorage.getItem('wb_tables')) || { "Table 1": {} },
+            currentTableIdx: "Table 1",
+            currentCols: 10,
+            events: JSON.parse(localStorage.getItem('wb_events')) || {},
+            selectedCellId: null,
+
+            init() {
+                lucide.createIcons();
+                this.renderCalendar();
+                this.initTableSystem();
+                this.updateConvUnits();
+                this.renderTodos();
+                this.initTimezone();
+                this.updateSummary();
+
+                const ctxMenu = document.getElementById('context-menu');
+                window.addEventListener('click', () => ctxMenu.style.display = 'none');
+                window.addEventListener('contextmenu', (e) => {
+                    if(e.target.classList.contains('cell')) {
+                        e.preventDefault();
+                        this.selectedCellId = e.target.dataset.cellId;
+                        ctxMenu.style.left = `${e.clientX}px`;
+                        ctxMenu.style.top = `${e.clientY}px`;
+                        ctxMenu.style.display = 'block';
+                    }
+                });
+
+                // Trash Button Logic
+                const checkboxes = document.querySelectorAll('#trash-modal input[type="checkbox"]');
+                const btn = document.getElementById('trash-confirm-btn');
+                checkboxes.forEach(cb => {
+                    cb.addEventListener('change', () => {
+                        const checked = Array.from(checkboxes).some(c => c.checked);
+                        btn.disabled = !checked;
+                        btn.style.opacity = checked ? "1" : "0.5";
+                    });
+                });
+            },
+
+            setLanguage(lang) {
+                this.currentLang = lang;
+                document.querySelectorAll('[data-i18n]').forEach(el => {
+                    const key = el.getAttribute('data-i18n');
+                    el.innerText = this.translations[lang][key] || el.innerText;
+                });
+            },
+
+            showSection(id) {
+                document.querySelectorAll('.section').forEach(s => s.classList.add('hidden-section'));
+                const target = document.getElementById(id);
+                if(target) {
+                    target.classList.remove('hidden-section');
+                    if(id === 'finance') this.initStockChart();
+                    if(id === 'calendar') this.renderCalendar();
+                    if(id === 'table') this.initTableSystem();
+                }
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
+                const btn = document.getElementById('btn-' + id);
+                if(btn) btn.classList.add('active-tab');
+            },
+
+            // --- Converter ---
+            updateConvUnits() {
+                const cat = document.getElementById('conv-cat').value;
+                const from = document.getElementById('conv-from');
+                const to = document.getElementById('conv-to');
+                from.innerHTML = ''; to.innerHTML = '';
+
+                const units = {
+                    length: { mm: 0.001, cm: 0.01, m: 1, km: 1000, inch: 0.0254, ft: 0.3048, mile: 1609.34 },
+                    weight: { mg: 0.000001, g: 0.001, kg: 1, lb: 0.453592, oz: 0.0283495 },
+                    volume: { ml: 0.001, L: 1, gal: 3.78541, m3: 1000 },
+                    speed: { mps: 1, kph: 0.277778, mph: 0.44704 },
+                    temp: { C: 'C', F: 'F', K: 'K' },
+                    currency: { EUR: 1, USD: 1.08, GBP: 0.86, JPY: 150, CHF: 1.03 }
+                };
+
+                if(cat === 'temp') {
+                    ['C', 'F', 'K'].forEach(u => { from.innerHTML += `<option value="${u}">${u}</option>`; to.innerHTML += `<option value="${u}">${u}</option>`; });
+                } else if (units[cat]) {
+                    Object.keys(units[cat]).forEach(u => { from.innerHTML += `<option value="${u}">${u}</option>`; to.innerHTML += `<option value="${u}">${u}</option>`; });
+                }
+            },
+
+            performConvert() {
+                const val = parseFloat(document.getElementById('conv-val').value);
+                const cat = document.getElementById('conv-cat').value;
+                const from = document.getElementById('conv-from').value;
+                const to = document.getElementById('conv-to').value;
+                if(isNaN(val)) return;
+
+                const units = {
+                    length: { mm: 0.001, cm: 0.01, m: 1, km: 1000, inch: 0.0254, ft: 0.3048, mile: 1609.34 },
+                    weight: { mg: 0.000001, g: 0.001, kg: 1, lb: 0.453592, oz: 0.0283495 },
+                    volume: { ml: 0.001, L: 1, gal: 3.78541, m3: 1000 },
+                    speed: { mps: 1, kph: 0.277778, mph: 0.44704 },
+                    currency: { EUR: 1, USD: 1.08, GBP: 0.86, JPY: 150, CHF: 1.03 }
+                };
+
+                let res = 0;
+                if(cat === 'temp') {
+                    let c = (from === 'C') ? val : (from === 'F') ? (val - 32) * 5/9 : val - 273.15;
+                    res = (to === 'C') ? c : (to === 'F') ? (c * 9/5) + 32 : c + 273.15;
+                } else if (cat === 'currency') {
+                    res = (val * units.currency[from]) / units.currency[to];
+                } else if (units[cat]) {
+                    res = (val * units[cat][from]) / units[cat][to];
+                }
+                document.getElementById('conv-res').innerText = res.toLocaleString(undefined, {maximumFractionDigits: 4});
+            },
+
+            calcCurr() {
+                const v = parseFloat(document.getElementById('curr-val').value);
+                const r = parseFloat(document.getElementById('curr-rate').value);
+                document.getElementById('curr-res').innerText = (v * r).toLocaleString();
+            },
+
+            calcTip() {
+                const total = parseFloat(document.getElementById('tip-total').value);
+                const perc = parseFloat(document.getElementById('tip-perc').value);
+                document.getElementById('tip-res').innerText = (total * (1 + perc/100)).toLocaleString();
+            },
+
+            appendBasic(v) { document.getElementById('basic-display').value += v; },
+            appendSci(v) { document.getElementById('sci-display').value += v; },
+            clearCalc(t) { document.getElementById(t === 'basic' ? 'basic-display' : 'sci-display').value = ''; },
+            calculateBasic() {
+                try {
+                    let v = document.getElementById('basic-display').value;
+                    v = v.replace(/[^-0-9+\/*.]/g, '');
+                    document.getElementById('basic-display').value = eval(v);
+                } catch { document.getElementById('basic-display').value = "Error"; }
+            },
+            calculateSci() {
+                try {
+                    let v = document.getElementById('sci-display').value;
+                    v = v.replace(/sin\(/g, 'Math.sin(').replace(/cos\(/g, 'Math.cos(').replace(/tan\(/g, 'Math.tan(').replace(/sqrt\(/g, 'Math.sqrt(').replace(/log\(/g, 'Math.log10(').replace(/pi/g, 'Math.PI');
+                    document.getElementById('sci-display').value = eval(v);
+                } catch { document.getElementById('sci-display').value = "Error"; }
+            },
+            sciOp(op) {
+                let v = parseFloat(document.getElementById('sci-display').value);
+                if(isNaN(v)) return;
+                let res = 0;
+                if(op === 'sin') res = Math.sin(v);
+                if(op === 'cos') res = Math.cos(v);
+                if(op === 'tan') res = Math.tan(v);
+                if(op === 'sqrt') res = Math.sqrt(v);
+                if(op === 'log') res = Math.log10(v);
+                if(op === 'pow') res = Math.pow(v, 2);
+                if(op === 'pi') { document.getElementById('sci-display').value = Math.PI.toFixed(4); return; }
+                if(op === 'exp') res = Math.exp(v);
+                document.getElementById('sci-display').value = res.toFixed(4);
+            },
+
+            // --- Kalender ---
+            renderCalendar() {
+                const grid = document.getElementById('calendar-grid');
+                const nav = document.getElementById('calendar-nav');
+                grid.innerHTML = '';
+
+                const y = parseInt(document.getElementById('cal-year-sel').value);
+                let m = parseInt(document.getElementById('cal-month-sel').value);
+                nav.innerText = `${y} - ${document.getElementById('cal-month-sel').options[m].innerText}`;
+
+                const firstDay = new Date(y, m, 1).getDay();
+                const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+                const daysArr = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+                daysArr.forEach(d => { grid.innerHTML += `<div class="weekday-header">${d}</div>`; });
+
+                for(let i=0; i<firstDay; i++) grid.innerHTML += `<div class="calendar-day bg-white/5 rounded-lg"></div>`;
+
+                for(let d=1; d<=daysInMonth; d++) {
+                    const key = `${y}-${m+1}-${d}`;
+                    const active = this.events[key] ? "bg-blue-500/40 border-blue-500/50" : "";
+                    grid.innerHTML += `<div class="calendar-day ${active} rounded-lg hover:bg-blue-500/40 cursor-pointer transition" onclick="app.addEvent('${key}')">${d}</div>`;
+                }
+                this.renderEventListeners();
+            },
+
+            renderEventListeners() {
+                const tbody = document.getElementById('event-list-body');
+                tbody.innerHTML = '';
+                const sortedKeys = Object.keys(this.events).sort();
+
+                sortedKeys.forEach(key => {
+                    const [y, m, d] = key.split('-');
+                    const row = document.createElement('tr');
+                    row.className = "border-b border-white/5 hover:bg-white/5";
+                    row.innerHTML = `
+                        <td class="py-3">${d}.${m}.${y}</td>
+                        <td class="py-3">${this.events[key]}</td>
+                        <td class="py-3 text-right">
+                            <button onclick="app.editEvent('${key}')" class="text-blue-400 mr-2">${this.translations[this.currentLang].edit_btn}</button>
+                            <button onclick="app.deleteEvent('${key}')" class="text-red-400">${this.translations[this.currentLang].delete_btn}</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            },
+
+            changeMonth(dir) {
+                let m = parseInt(document.getElementById('cal-month-sel').value);
+                m += dir;
+                if(m > 11) {
+                    m = 0;
+                    document.getElementById('cal-year-sel').value = parseInt(document.getElementById('cal-year-sel').value) + 1;
+                }
+                if(m < 0) {
+                    m = 11;
+                    document.getElementById('cal-year-sel').value = parseInt(document.getElementById('cal-year-sel').value) - 1;
+                }
+                document.getElementById('cal-month-sel').value = m;
+                this.renderCalendar();
+            },
+
+            addEvent(key) {
+                const txt = prompt(`Termin für ${key}:`);
+                if(txt !== null) {
+                    this.events[key] = txt;
+                    localStorage.setItem('wb_events', JSON.stringify(this.events));
+                    this.renderCalendar();
+                }
+            },
+
+            editEvent(key) {
+                const txt = prompt(`Bearbeite Termin für ${key}:`, this.events[key]);
+                if(txt !== null) {
+                    this.events[key] = txt;
+                    localStorage.setItem('wb_events', JSON.stringify(this.events));
+                    this.renderCalendar();
+                }
+            },
+
+            deleteEvent(key) {
+                if(confirm("Termin löschen?")) {
+                    delete this.events[key];
+                    localStorage.setItem('wb_events', JSON.stringify(this.events));
+                    this.renderCalendar();
+                }
+            },
+
+            // --- Tabelle ---
+            initTableSystem() {
+                const tabs = document.getElementById('table-tabs');
+                tabs.innerHTML = '';
+                Object.keys(this.tableData).forEach(name => {
+                    const container = document.createElement('div');
+                    container.className = `flex items-center gap-2 px-3 py-2 rounded-lg ${name === this.currentTableIdx ? 'bg-blue-600' : 'bg-slate-800'}`;
+                    container.innerHTML = `
+                        <span class="font-bold">${name}</span>
+                        <button onclick="app.renameTable('${name}')"><i data-lucide="pencil" class="w-3 h-3"></i></button>
+                    `;
+                    tabs.appendChild(container);
+                });
+                this.renderTable();
+            },
+
+            renderTable() {
+                const container = document.getElementById('excel-container');
+                container.innerHTML = '';
+                container.style.setProperty('--cols', this.currentCols);
+                let header = `<div class="header-cell">ID</div>`;
+                for(let i=0; i<this.currentCols; i++) header += `<div class="header-cell">${String.fromCharCode(65 + (i%26))}${Math.floor(i/26)+1}</div>`;
+                container.innerHTML += header;
+                for(let r=1; r<=50; r++) {
+                    container.innerHTML += `<div class="cell font-bold text-slate-500">${r}</div>`;
+                    for(let c=0; c<this.currentCols; c++) {
+                        const id = `${this.currentTableIdx}_${r}_${c}`;
+                        const val = this.tableData[this.currentTableIdx][id] || "";
+                        container.innerHTML += `<div class="cell" contenteditable="true" data-cell-id="${id}">${val}</div>`;
+                    }
+                }
+                container.querySelectorAll('.cell').forEach(cell => {
+                    cell.addEventListener('focus', () => {
+                        this.selectedCellId = cell.dataset.cellId;
+                    });
+                });
+                lucide.createIcons();
+            },
+
+            renameTable(name) {
+                const newName = prompt("Neuer Name:", name);
+                if (newName && newName !== name) {
+                    this.tableData[newName] = this.tableData[name];
+                    delete this.tableData[name];
+                    this.currentTableIdx = newName;
+                    localStorage.setItem('wb_tables', JSON.stringify(this.tableData));
+                    this.initTableSystem();
+                }
+            },
+
+            addNewTable() {
+                const name = prompt("Name:", "Table " + (Object.keys(this.tableData).length + 1));
+                if(name) {
+                    this.tableData[name] = {};
+                    localStorage.setItem('wb_tables', JSON.stringify(this.tableData));
+                    this.initTableSystem();
+                }
+            },
+
+            addColumns() {
+                if(this.currentCols < 650) { this.currentCols += 26; this.initTableSystem(); }
+            },
+
+            addRow() {
+                const container = document.getElementById('excel-container');
+                const cells = container.querySelectorAll('.cell');
+                const lastRow = parseInt(cells[cells.length - 2].innerText);
+                const nextRow = lastRow + 1;
+                let rowHtml = `<div class="cell font-bold text-slate-500">${nextRow}</div>`;
+                for(let c=0; c<this.currentCols; c++) {
+                    rowHtml += `<div class="cell" contenteditable="true" data-cell-id="${this.currentTableIdx}_${nextRow}_${c}"></div>`;
+                }
+                container.insertAdjacentHTML('beforeend', rowHtml);
+            },
+
+            formatCell(type) {
+                const cell = document.querySelector(`.cell[data-cell-id="${this.selectedCellId}"]`);
+                if(!cell) return;
+                document.execCommand(type, false, null);
+                cell.focus();
+            },
+
+            // --- Finanzen (v2.0 Fix) ---
+            addFinance() {
+                const label = document.getElementById('fin-label').value;
+                const val = parseFloat(document.getElementById('fin-value').value);
+                const type = document.getElementById('fin-type').value;
+                const date = document.getElementById('fin-date').value;
+
+                // Logic: Income is positive, Expense is negative
+                let finalVal = (type === 'expense') ? -Math.abs(val) : Math.abs(val);
+
+                if(label && !isNaN(val) && date) {
+                    const data = JSON.parse(localStorage.getItem('wb_finance')) || [];
+                    data.push({label, val: finalVal, type, date});
+                    localStorage.setItem('wb_finance', JSON.stringify(data));
+
+                    // Clear Inputs
+                    document.getElementById('fin-label').value = '';
+                    document.getElementById('fin-value').value = '';
+
+                    this.updateSummary();
+                    this.initStockChart();
+                }
+            },
+
+            updateSummary() {
+                const data = JSON.parse(localStorage.getItem('wb_finance')) || [];
+                const total = data.reduce((a, b) => a + b.val, 0);
+                const summaryEl = document.getElementById('fin-summary');
+                summaryEl.innerText = total.toLocaleString('de-DE', {style:'currency', currency:'EUR'});
+                summaryEl.className = total >= 0 ? "text-3xl font-mono text-green-400" : "text-3xl font-mono text-red-400";
+            },
+
+            initStockChart() {
+                const data = JSON.parse(localStorage.getItem('wb_finance')) || [];
+                const ctx = document.getElementById('stockChart').getContext('2d');
+                if(window.myChart) window.myChart.destroy();
+                window.myChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.map(d => d.date.split('T')[0]),
+                        datasets: [{
+                            label: 'Finance',
+                            data: data.map(d => d.val),
+                            borderColor: data.length > 0 ? (data[data.length-1].val >= 0 ? '#22c55e' : '#ef4444') : '#3b82f6',
+                            tension: 0.3,
+                            fill: true,
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' } } }
+                    }
+                });
+            },
+
+            // --- Todo ---
+            renderTodos() {
+                const list = document.getElementById('todo-list');
+                const data = JSON.parse(localStorage.getItem('wb_todos')) || [];
+                list.innerHTML = '';
+                data.forEach((t, i) => {
+                    list.innerHTML += `<div class="flex items-center gap-3 p-4 bg-slate-900/50 rounded-xl">
+                        <input type="checkbox" ${t.done ? 'checked' : ''} onchange="app.toggleTodo(${i})" class="w-5 h-5">
+                        <span class="${t.done ? 'line-through text-slate-500' : ''}">${t.text}</span>
+                        <button onclick="app.deleteTodo(${i})" class="ml-auto text-red-400"><i data-lucide="x" class="w-4"></i></button>
+                    </div>`;
+                });
+                lucide.createIcons();
+            },
+
+            addTodo() {
+                const input = document.getElementById('todo-input');
+                if(!input.value) return;
+                const data = JSON.parse(localStorage.getItem('wb_todos')) || [];
+                data.push({text: input.value, done: false});
+                localStorage.setItem('wb_todos', JSON.stringify(data));
+                input.value = '';
+                this.renderTodos();
+            },
+
+            toggleTodo(i) {
+                const data = JSON.parse(localStorage.getItem('wb_todos'));
+                data[i].done = !data[i].done;
+                localStorage.setItem('wb_todos', JSON.stringify(data));
+                this.renderTodos();
+            },
+
+            deleteTodo(i) {
+                const data = JSON.parse(localStorage.getItem('wb_todos'));
+                data.splice(i, 1);
+                localStorage.setItem('wb_todos', JSON.stringify(data));
+                this.renderTodos();
+            },
+
+            // --- Zeitverwaltung (High Precision) ---
+            swStartTime: null,
+            timerStartTime: null,
+            timerDuration: 0,
+            swInterval: null,
+            timerInterval: null,
+
+            toggleStopwatch() {
+                const btn = document.getElementById('sw-btn');
+                if(this.swStartTime) {
+                    clearInterval(this.swInterval);
+                    this.swStartTime = null;
+                    btn.innerText = "Start";
+                    btn.className = "bg-green-600 px-6 py-2 rounded-xl font-bold";
+                } else {
+                    btn.innerText = "Stop";
+                    btn.className = "bg-red-600 px-6 py-2 rounded-xl font-bold";
+                    this.swStartTime = performance.now();
+                    this.swInterval = setInterval(() => {
+                        const now = performance.now();
+                        const diff = Math.floor(now - this.swStartTime);
+                        const ms = Math.floor((diff % 1000) / 10);
+                        const sec = Math.floor((diff / 1000) % 60).toString().padStart(2, '0');
+                        const min = Math.floor((diff / 60000) % 60).toString().padStart(2, '0');
+                        const hr = Math.floor(diff / 3600000).toString().padStart(2, '0');
+                        document.getElementById('stopwatch-display').innerText = `${hr}.${min}.${sec}.${ms.toString().padStart(2, '0')}`;
+                    }, 10);
+                }
+            },
+
+            resetStopwatch() {
+                clearInterval(this.swInterval);
+                this.swStartTime = null;
+                document.getElementById('stopwatch-display').innerText = "00.00.00.00";
+                document.getElementById('sw-btn').innerText = "Start";
+                document.getElementById('sw-btn').className = "bg-green-600 px-6 py-2 rounded-xl font-bold";
+            },
+
+            startTimer() {
+                const h = parseInt(document.getElementById('timer-h').value) || 0;
+                const m = parseInt(document.getElementById('timer-m').value) || 0;
+                const s = parseInt(document.getElementById('timer-s').value) || 0;
+                const ms = parseInt(document.getElementById('timer-ms').value) || 0;
+
+                this.timerDuration = (h * 3600000) + (m * 60000) + (s * 1000) + ms;
+                if(this.timerDuration <= 0) return;
+
+                if(this.timerInterval) clearInterval(this.timerInterval);
+                this.timerStartTime = performance.now();
+
+                this.timerInterval = setInterval(() => {
+                    const now = performance.now();
+                    const elapsed = Math.floor(now - this.timerStartTime);
+                    const remaining = this.timerDuration - elapsed;
+
+                    if(remaining <= 0) {
+                        clearInterval(this.timerInterval);
+                        alert("Fertig!");
+                        return;
+                    }
+
+                    let ms = Math.floor((remaining % 1000) / 10);
+                    let sec = Math.floor((remaining / 1000) % 60).toString().padStart(2, '0');
+                    let min = Math.floor((remaining / 60000) % 60).toString().padStart(2, '0');
+                    let hr = Math.floor(remaining / 3600000).toString().padStart(2, '0');
+
+                    document.getElementById('timer-display').innerText = `${hr}:${min}:${sec}.${ms.toString().padStart(2, '0')}`;
+                }, 10);
+            },
+
+            stopTimer() {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+            },
+
+            resetTimer() {
+                clearInterval(this.timerInterval);
+                this.timerInterval = null;
+                this.timerDuration = 0;
+                document.getElementById('timer-display').innerText = "00:00.00";
+                document.getElementById('timer-h').value = '';
+                document.getElementById('timer-m').value = '';
+                document.getElementById('timer-s').value = '';
+                document.getElementById('timer-ms').value = '';
+            },
+
+            initTimezone() {
+                const zones = [
+                    { name: "UTC", offset: 0 }, { name: "Berlin", offset: 1 },
+                    { name: "New York", offset: -5 }, { name: "Tokyo", offset: 9 },
+                    { name: "London", offset: 0 }, { name: "Dubai", offset: 4 },
+                    { name: "Sydney", offset: 10 }, { name: "Paris", offset: 1 },
+                    { name: "Mumbai", offset: 5.5 }, { name: "Los Angeles", offset: -8 },
+                    { name: "Beijing", offset: 8 }, { name: "Moscow", offset: 3 },
+                    { name: "Cairo", offset: 2 }, { name: "Mexico City", offset: -6 },
+                    { name: "Seoul", offset: 9 }, { name: "Singapore", offset: 8 },
+                    { name: "Sao Paulo", offset: -3 }, { name: "Johannesburg", offset: 2 },
+                    { name: "Istanbul", offset: 3 }, { name: "Rome", offset: 1 },
+                    { name: "Stockholm", offset: 1 }, { name: "Warsaw", offset: 1 },
+                    { name: "Madrid", offset: 1 }, { name: "Athens", offset: 2 },
+                    { name: "Bangkok", offset: 7 }, { name: "Jakarta", offset: 7 },
+                    { name: "Cape Town", offset: 2 }, { name: "Lima", offset: -5 },
+                    { name: "Santiago", offset: -4 }, { name: "Hong Kong", offset: 8 }
+                ];
+                const s1 = document.getElementById('tz-1');
+                const s2 = document.getElementById('tz-2');
+                zones.forEach(z => {
+                    s1.innerHTML += `<option value="${z.offset}">${z.name}</option>`;
+                    s2.innerHTML += `<option value="${z.offset}">${z.name}</option>`;
+                });
+            },
+
+            selectTZ(idx) {
+                const zones = [
+                    { name: "New York", offset: -5 }, { name: "London", offset: 0 },
+                    { name: "Berlin", offset: 1 }, { name: "Dubai", offset: 4 },
+                    { name: "Tokyo", offset: 9 }, { name: "Sydney", offset: 10 }
+                ];
+                document.getElementById('tz-1').value = zones[idx-1].offset;
+                document.getElementById('tz-2').value = zones[(idx+1)%6].offset;
+                this.calcTimezoneDiff();
+            },
+
+            calcTimezoneDiff() {
+                const z1 = parseInt(document.getElementById('tz-1').value);
+                const z2 = parseInt(document.getElementById('tz-2').value);
+                const diff = z1 - z2;
+                document.getElementById('tz-res').innerText = `${diff > 0 ? '+' : ''}${diff} Std.`;
+            },
+
+            calcDuration() {
+                const s = document.getElementById('time-start').value;
+                const e = document.getElementById('time-end').value;
+                if(!s || !e) return;
+                const start = new Date(`2023-01-01T${s}`);
+                const end = new Date(`2023-01-01T${e}`);
+                const diff = Math.floor((end - start) / 1000);
+                if(diff < 0) return alert("Error!");
+                document.getElementById('duration-res').innerText = `${Math.floor(diff/3600)}h ${Math.floor((diff%3600)/60)}m ${diff%60}s`;
+            },
+
+            // --- Utils ---
+            openTrash() { document.getElementById('trash-modal').classList.remove('hidden'); },
+            closeTrash() { document.getElementById('trash-modal').classList.add('hidden'); },
+            confirmDelete() {
+                if(document.getElementById('del-fin').checked) localStorage.removeItem('wb_finance');
+                if(document.getElementById('del-cal').checked) localStorage.removeItem('wb_events');
+                if(document.getElementById('del-todo').checked) localStorage.removeItem('wb_todos');
+                if(document.getElementById('del-table').checked) {
+                    localStorage.removeItem('wb_tables');
+                    this.tableData = { "Table 1": {} };
+                }
+                this.closeTrash();
+                location.reload();
+            },
+
+            exportExcel() {
+                let content = "ID\n";
+                for(let r=1; r<=50; r++) {
+                    content += r + "\n";
+                    for(let c=0; c<this.currentCols; c++) {
+                        content += (this.tableData[this.currentTableIdx][`${this.currentTableIdx}_${r}_${c}`] || "") + "\t";
+                    }
+                    content += "\n";
+                }
+                const blob = new Blob([content], {type: 'text/csv'});
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = "export.csv"; a.click();
+            }
+        };
+
+        window.onload = () => {
+            const yearSel = document.getElementById('cal-year-sel');
+            for(let y=1975; y<=2125; y++) {
+                let opt = document.createElement('option');
+                opt.value = y; opt.innerText = y;
+                if(y === new Date().getFullYear()) opt.selected = true;
+                yearSel.appendChild(opt);
+            }
+            const monthSel = document.getElementById('cal-month-sel');
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            months.forEach((m, i) => {
+                let opt = document.createElement('option');
+                opt.value = i; opt.innerText = m;
+                if(i === new Date().getMonth()) opt.selected = true;
+                monthSel.appendChild(opt);
+            });
+
+            app.init();
+        };
+    </script>
+</body
+</html
