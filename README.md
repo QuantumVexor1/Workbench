@@ -1,4 +1,4 @@
-# ⚡ Workbench v3.6
+# ⚡ Workbench v3.7
 
 **One workspace. Multiple tools. Endless possibilities.**
 
@@ -6,8 +6,8 @@ Workbench is an all-in-one browser-based toolbox that brings together useful eve
 
 ### ✨ Features
 
-- 📅 **Calendar** – Manage dates and events.
 - 🧮 **Calculator** – Basic, scientific and specialized calculations.
+- 📅 **Calendar** – Manage dates and events.
 - 🎨 **Color Picker** – Work with HEX, RGB and HSL colors.
 - 💰 **Finance Tracker** – Keep track of income, expenses and balances.
 - 💻 **HTML Viewer** – Write HTML and preview it instantly.
@@ -40,8 +40,7 @@ No installation or build process required.
 
 ### 📌 Project Status
 
-Workbench is an ongoing personal project. Version 3.6 is functional, but some features may still contain bugs or need further improvements.
-
+Workbench is an ongoing personal project. Version 3.7 is functional, but some features may still contain bugs or need further improvements.
 More updates and improvements are planned.
 
 ---
