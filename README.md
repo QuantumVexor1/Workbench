@@ -1,50 +1,49 @@
-# ⚡ Workbench v3.7
+<div align="center">
 
-**One workspace. Multiple tools. Endless possibilities.**
+# 🛠️ Workbench v4.0
 
-Workbench is an all-in-one browser-based toolbox that brings together useful everyday utilities in one clean, modern interface.
+**An all-in-one, browser-based productivity suite for daily workflows, calculations, document handling, and time management.**
 
-### ✨ Features
 
-- 🧮 **Calculator** – Basic, scientific and specialized calculations.
-- 📅 **Calendar** – Manage dates and events.
-- 🎨 **Color Picker** – Work with HEX, RGB and HSL colors.
-- 💰 **Finance Tracker** – Keep track of income, expenses and balances.
-- 💻 **HTML Viewer** – Write HTML and preview it instantly.
-- 🔐 **Password Generator** – Generate customizable passwords.
-- 📄 **PDF Toolbox** – View and annotate documents.
-- 🎲 **Randomizer** – Coin flips and random selections.
-- 📊 **Data Tables** – Organize and export data as CSV.
-- ✅ **Task Manager** – Organize tasks and track progress.
-- ⏱️ **Time Management** – Stopwatch, timer and timezone comparison.
-- 📝 **Text Editor** – Simple rich-text editing.
-
-### 🚀 Getting Started
-
-1. Download or clone this repository.
-2. Open `index.html` in your browser.
-3. Start using Workbench!
-
-No installation or build process required.
-
-**Visit the site at** [https://quantumvexor1.github.io/Workbench/](https://quantumvexor1.github.io/Workbench/) **without a download!**
-
-### 🛠️ Built With
-
-- HTML5
-- CSS3
-- JavaScript
-- Tailwind CSS
-- Chart.js
-- Lucide Icons
-
-### 📌 Project Status
-
-Workbench is an ongoing personal project. Version 3.7 is functional, but some features may still contain bugs or need further improvements.
-More updates and improvements are planned.
+</div>
 
 ---
 
-**Created by QuantumVexor1, 2026**
+## 📖 Overview
 
-99,9% AI-generated
+**Workbench v4.0** brings 14 essential everyday utilities together into a single, distraction-free workspace. No installations, no context switching—just open your browser and get things done.
+
+---
+
+## ✨ Modules & Features
+
+| Module | Key Capabilities |
+| :--- | :--- |
+| 🧮 **Calculator & Converter** | Basic & scientific math, percentage calculator, and a **24-category universal converter** (Length, Weight, Currency, Data, Energy, Electrical units, etc.). |
+| 📅 **Calendar** | Schedule events with optional timestamps, jump directly to dates, and manage upcoming schedules. |
+| 🎨 **Color Picker** | Inspect and convert **HEX, RGB, HSL, CMYK, and HSV/HSB** values with luminance, contrast checks, and complementary colors. |
+| 💰 **Finance** | Track income/expenses with a live balance, plus built-in **Compound Interest** and **Loan** calculators. |
+| 🌐 **HTML Viewer** | Write and live-preview HTML code with instant **Mobile, Tablet, and Desktop** viewport toggles. |
+| 📱 **QR Code Tool** | Scan QR codes via webcam or image upload, or generate and download custom QR codes from text/URLs. |
+| 🔐 **Password Generator** | Create strong, customizable passwords (length, numbers, symbols, uppercase) with session history. |
+| 📄 **PDF Toolbox** | Upload **PDF, PNG, or JPG** files to draw and annotate directly in the browser with custom brush sizes and colors. |
+| 🎲 **Randomizer** | Flip a virtual coin or pick random entries from a custom comma-separated list. |
+| 📊 **Data Table** | Build dynamic spreadsheets with custom rows/columns, text styling, and **CSV import/export**. |
+| ✅ **Task Management** | Organize to-dos by priority (**Low, Medium, High**) with live completion rate tracking. |
+| ⏱️ **Time Management** | High-precision **Stopwatch & Timer** (down to ms), global **Timezone Comparison**, and a **Duration Calculator**. |
+| 📝 **Text Editor** | Rich-text formatting (bold, italic, underline, custom font sizes) with **.txt** and **.docx** import/export. |
+| 💾 **Workspace Data** | Full workspace backup via JSON export/import, plus selective category clearing for privacy. |
+
+---
+
+## 👤 Credits & Attribution
+
+* **Author:** [QuantumVexor1](https://github.com)
+* **Release Year:** 2026
+* **Development Note:** 99% AI-generated
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License** – see the [LICENSE](LICENSE) file for details.
