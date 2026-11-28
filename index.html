@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workbench v5.5</title>
+    <title>Workbench v6.3</title>
     <script src="https://cdn.tailwindcss.com/3.4.17"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -43,6 +43,7 @@
         #sidebar-resize-handle::after { content:""; position:absolute; top:0; bottom:0; left:3px; width:2px; background:transparent; transition:background .15s; }
         #sidebar-resize-handle:hover::after, #sidebar-resize-handle:focus::after, body.sidebar-resizing #sidebar-resize-handle::after { background:#3b82f6; }
         body.sidebar-resizing { cursor:col-resize; user-select:none; }
+        button{transition:filter .12s ease,transform .12s ease} button:active{filter:brightness(.78);transform:translateY(1px)}
         .active-tab {
             background: rgba(59, 130, 246, 0.15);
             border-left: 3px solid var(--accent);
@@ -54,6 +55,11 @@
         .custom-scroll::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
 
         .hidden-section { display: none; }
+        #chemistry input, #chemistry select, #chemistry textarea { box-sizing:border-box; color:#f8fafc; background-color:#020617; border:1px solid #475569; }
+        #chemistry input:focus, #chemistry select:focus { outline:2px solid #10b981; outline-offset:1px; }
+        #chemistry input::placeholder { color:#64748b; opacity:1; }
+        #periodic-modal { z-index:1200; }
+        #periodic-modal:not(.hidden) { display:flex; }
 
         .excel-grid {
             display: grid;
@@ -195,13 +201,30 @@
         .search-result { display:flex; width:100%; text-align:left; padding:10px 14px; gap:12px; align-items:center; background:#0f172a; border-bottom:1px solid rgba(255,255,255,.06); }
         .search-result:hover, .search-result:focus { background:#1e3a8a; outline:none; }
 
-        .sidebar-action-row { display:grid; grid-template-columns:minmax(48px,1fr) auto minmax(82px,1fr); align-items:center; gap:6px; }
+        .sidebar-action-row { display:grid; grid-template-columns:minmax(48px,1fr) auto auto auto; align-items:center; gap:6px; }
         .help-button { display:flex; align-items:center; justify-content:center; gap:5px; min-width:0; padding:8px 5px; border-radius:9px; border:1px solid rgba(96,165,250,.35); background:rgba(30,64,175,.22); color:#93c5fd; font-size:11px; font-weight:700; }
         .help-button:hover { background:rgba(30,64,175,.38); }
         .language-switch { display:flex; border:1px solid rgba(148,163,184,.25); border-radius:9px; overflow:hidden; }
         .language-switch button { padding:7px 9px; font-size:10px; font-weight:800; color:#94a3b8; background:rgba(30,41,59,.75); }
         .language-switch button.language-active { color:#fff; background:#2563eb; }
+        .device-mode-switch button{display:flex;align-items:center;justify-content:center;min-width:32px;padding:7px 8px}
         .sidebar-credit { text-align:right; color:#64748b; font-size:9px; font-weight:700; white-space:nowrap; }
+        .device-mode-button{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid rgba(148,163,184,.25);border-radius:8px;color:#cbd5e1;background:#1e293b}
+        .mobile-menu-toggle{display:none;position:fixed;z-index:150;top:10px;left:10px;width:42px;height:42px;border-radius:12px;background:#1e293b;color:#fff;font-size:23px;box-shadow:0 4px 18px #0008}
+        body.smartphone-mode #workbench-sidebar{position:fixed!important;inset:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;min-width:0!important;flex-basis:auto!important;z-index:140;transform:translateX(-105%);transition:transform .24s ease,visibility .24s ease;display:flex!important;visibility:hidden;pointer-events:none}
+        body.smartphone-mode.mobile-sidebar-open #workbench-sidebar{transform:translateX(0);visibility:visible;pointer-events:auto}
+        body.smartphone-mode #mobile-menu-toggle{display:flex;align-items:center;justify-content:center}
+        body.smartphone-mode.mobile-sidebar-open #mobile-menu-toggle{display:none}
+        body.smartphone-mode #main-content{width:100%;min-width:0;padding:64px 12px 18px!important;flex:1 1 100%}
+        body.smartphone-mode .section{min-height:calc(100vh - 80px)}
+        body.smartphone-mode #sidebar-resize-handle{display:none}
+        .mobile-sidebar-search{display:none}
+        body.smartphone-mode .mobile-sidebar-search{display:block;flex-shrink:0;margin:0 0 10px;padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.12)}
+        body.smartphone-mode #main-content > .mb-6.max-w-2xl.mx-auto{display:none!important}
+        body.smartphone-mode #mobile-tool-search-results{position:relative;max-height:34vh;overflow:auto;background:#0f172a}
+        body.smartphone-mode #mobile-tool-search-results .search-result{padding:9px 10px}
+        #mobile-menu-toggle{align-items:center;justify-content:center;text-align:center;line-height:1;padding:0;font-size:0}
+        #mobile-menu-toggle::before{content:'☰';font-size:23px;line-height:1;display:block;margin:auto;transform:translateY(-2px)}
         .backup-triple { grid-template-columns:1fr 1fr 1fr; }
         .backup-triple button + button { border-left:1px solid rgba(255,255,255,.25); }
         .help-overlay { position:fixed; inset:2.5vh 2.5vw; z-index:200; display:flex; align-items:stretch; justify-content:center; background:rgba(2,6,23,.82); backdrop-filter:blur(7px); border:1px solid rgba(148,163,184,.25); border-radius:20px; box-shadow:0 25px 90px #000b; }
@@ -216,7 +239,7 @@
         .help-card h4 { font-size:13px; font-weight:800; color:#c4b5fd; margin-bottom:6px; }
         .help-card p { color:#cbd5e1; font-size:12px; line-height:1.6; }
         .help-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 28px; border-top:1px solid rgba(255,255,255,.1); color:#64748b; font-size:11px; flex-shrink:0; }
-        @media(max-width:420px) { .sidebar-action-row { grid-template-columns:1fr auto; } .sidebar-credit { grid-column:1/-1; text-align:right; } .help-overlay { inset:1vh 1vw; } .help-header,.help-body { padding:16px; } }
+        @media(max-width:420px) { .sidebar-action-row { grid-template-columns:minmax(48px,1fr) auto auto auto; } .sidebar-credit { grid-column:1/-1; text-align:right; } .help-overlay { inset:1vh 1vw; } .help-header,.help-body { padding:16px; } }
     </style>
 </head>
 <body class="flex">
@@ -272,6 +295,14 @@
         </section>
     </div>
 
+    <div id="periodic-modal" class="help-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="periodic-title">
+        <section class="help-window" style="max-width: min(1500px,96vw)">
+            <header class="help-header"><div><div class="text-xs uppercase tracking-[.2em] text-cyan-300 font-bold" data-periodic-kicker>CHEMISTRY REFERENCE</div><h2 id="periodic-title" class="text-3xl font-extrabold mt-1" data-periodic-title>Periodic table</h2><p class="text-sm text-slate-400 mt-1" data-periodic-subtitle>Select an element to see its key properties.</p></div><button onclick="app.closePeriodicTable()" class="help-close" aria-label="Close periodic table">✕</button></header>
+            <div class="help-body custom-scroll"><div class="flex flex-wrap gap-2 mb-4"><input id="periodic-search" oninput="app.renderPeriodicTable()" class="min-w-[220px] flex-1 bg-slate-950 border border-slate-700 rounded-xl p-2 text-sm" placeholder="Search name, symbol or atomic number"><select id="periodic-filter" onchange="app.renderPeriodicTable()" class="bg-slate-950 border border-slate-700 rounded-xl p-2 text-sm"><option value="all">All element families</option><option value="nonmetal">Nonmetals</option><option value="noble">Noble gases</option><option value="alkali">Alkali metals</option><option value="alkaline">Alkaline earth metals</option><option value="transition">Transition metals</option><option value="metalloid">Metalloids</option><option value="halogen">Halogens</option><option value="post">Post-transition metals</option><option value="lanth">Lanthanides</option><option value="act">Actinides</option></select></div><div id="periodic-grid" class="grid gap-1" style="grid-template-columns:repeat(18,minmax(42px,1fr));min-width:780px"></div><div id="periodic-detail" class="mt-5 rounded-2xl border border-slate-700 bg-slate-950/70 p-4" aria-live="polite"><p class="text-sm text-slate-400">Choose an element to inspect its properties.</p></div></div>
+            <footer class="help-footer justify-end"><span data-periodic-footer>118 elements · Standard atomic weights are approximate where appropriate.</span></footer>
+        </section>
+    </div>
+
     <div id="help-modal" class="help-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
         <section class="help-window">
             <header class="help-header">
@@ -280,7 +311,7 @@
             </header>
             <div class="help-body custom-scroll">
                 <h3 class="help-section-title">All tools</h3>
-                <div class="help-grid"><article class="help-card"><h4>Home</h4><p>A dashboard that brings together your tasks, calendar events, finance balance and quick-access tools.</p></article><article class="help-card"><h4>Calculator</h4><p>Use the basic and scientific calculators for arithmetic and more advanced mathematical expressions.</p></article><article class="help-card"><h4>Calendar</h4><p>Create dated events, set a time and add descriptions so you can remember what is planned.</p></article><article class="help-card"><h4>Colors</h4><p>Pick colors and work with HEX, RGB and HSL values, palettes, gradients and contrast checks. HEX is a base-16 color code, usually written as #RRGGBB.</p></article><article class="help-card"><h4>Finance</h4><p>Track income, expenses and your balance. The currency selector changes the displayed symbol only; it does not convert stored amounts.</p></article><article class="help-card"><h4>HTML Viewer</h4><p>Write or load HTML and preview how the page is rendered in a browser-like preview area.</p></article><article class="help-card"><h4>QR Code Tool</h4><p>Create QR codes from text or links, or scan an existing QR code using a camera or image.</p></article><article class="help-card"><h4>Password Gen</h4><p>Generate random passwords and review the local password-generation history.</p></article><article class="help-card"><h4>PDF Toolbox</h4><p>Open PDF files and use the available viewing and annotation tools.</p></article><article class="help-card"><h4>Random</h4><p>Use random tools such as coin flip and other chance-based selectors. Coin statistics count completed flips.</p></article><article class="help-card"><h4>Table</h4><p>Organize information in editable rows and columns, and import or export tabular data.</p></article><article class="help-card"><h4>Tasks</h4><p>Create a to-do list, mark tasks complete and set their importance.</p></article><article class="help-card"><h4>Time Mgmt</h4><p>Use the stopwatch to measure elapsed time and the timer to count down a duration.</p></article><article class="help-card"><h4>Text Editor</h4><p>Write and format text, then import or export supported document formats.</p></article></div>
+                <div class="help-grid"><article class="help-card"><h4>Home</h4><p>A dashboard that brings together your tasks, calendar events, finance balance and quick-access tools.</p></article><article class="help-card"><h4>Calculator</h4><p>Use the basic and scientific calculators for arithmetic and more advanced mathematical expressions.</p></article><article class="help-card"><h4>Calendar</h4><p>Create dated events, set a time and add descriptions so you can remember what is planned.</p></article><article class="help-card"><h4>Chemistry</h4><p>Explore the periodic table and calculate molar mass, amount of substance, mass concentration and density.</p></article><article class="help-card"><h4>Colors</h4><p>Pick colors and work with HEX, RGB and HSL values, palettes, gradients and contrast checks. HEX is a base-16 color code, usually written as #RRGGBB.</p></article><article class="help-card"><h4>Finance</h4><p>Track income, expenses and your balance. The currency selector changes the displayed symbol only; it does not convert stored amounts.</p></article><article class="help-card"><h4>HTML Viewer</h4><p>Write or load HTML and preview how the page is rendered in a browser-like preview area.</p></article><article class="help-card"><h4>QR Code Tool</h4><p>Create QR codes from text or links, or scan an existing QR code using a camera or image.</p></article><article class="help-card"><h4>Password Gen</h4><p>Generate random passwords and review the local password-generation history.</p></article><article class="help-card"><h4>Physics</h4><p>Use the dimensional physics calculator to combine quantities with units and choose a suitable output unit. Open the formula collection for equations and examples.</p></article><article class="help-card"><h4>Physics mini-calculators</h4><p>Calculate motion, electrical current and power with Ohm’s law, density from mass and volume, and wavelength from wave speed and frequency.</p></article><article class="help-card"><h4>Shoe Sizes</h4><p>Convert approximate shoe sizes between EU, US men’s, US women’s and UK systems, or estimate a size from foot length in centimetres. Sizing standards vary by brand, so treat results as a guide.</p></article><article class="help-card"><h4>PDF Toolbox</h4><p>Open PDF files and use the available viewing and annotation tools.</p></article><article class="help-card"><h4>Random</h4><p>Use random tools such as coin flip and other chance-based selectors. Coin statistics count completed flips.</p></article><article class="help-card"><h4>Table</h4><p>Organize information in editable rows and columns, and import or export tabular data.</p></article><article class="help-card"><h4>Tasks</h4><p>Create a to-do list, mark tasks complete and set their importance.</p></article><article class="help-card"><h4>Time Mgmt</h4><p>Use the stopwatch to measure elapsed time and the timer to count down a duration.</p></article><article class="help-card"><h4>Text Editor</h4><p>Write and format text, then import or export supported document formats.</p></article></div>
                 <h3 class="help-section-title mt-8">Converter categories</h3>
                 <p class="text-sm text-slate-400 mb-4">The converter changes a value from one unit to another within the same category. Choose a category, then select the starting and target units.</p>
                 <div class="help-grid"><article class="help-card"><h4>Length</h4><p>Measures distance or size, from tiny nanometres to kilometres, miles and astronomical distances.</p></article><article class="help-card"><h4>Weight / Mass</h4><p>Compares how much matter an object contains. Includes metric units and common imperial units.</p></article><article class="help-card"><h4>Volume</h4><p>Measures how much space a liquid, gas or container occupies, such as millilitres, litres and gallons.</p></article><article class="help-card"><h4>Speed</h4><p>Measures distance travelled per unit of time, such as metres per second, kilometres per hour or miles per hour.</p></article><article class="help-card"><h4>Temperature</h4><p>Converts temperature scales such as Celsius, Fahrenheit and Kelvin. Temperature conversions use offsets, not just multiplication.</p></article><article class="help-card"><h4>Currency</h4><p>Changes the numeric display between supported currencies using the converter's available rates. Rates may not be live.</p></article><article class="help-card"><h4>Data Units</h4><p>Measures digital information size, such as bits, bytes, kilobytes, megabytes, gigabytes and binary units.</p></article><article class="help-card"><h4>Area</h4><p>Measures a two-dimensional surface, such as square metres, hectares, acres or square feet.</p></article><article class="help-card"><h4>Pressure</h4><p>Measures force applied over an area, such as pascals, bar, atmospheres and psi.</p></article><article class="help-card"><h4>Energy</h4><p>Measures the ability to do work or transfer heat, such as joules, calories and kilowatt-hours.</p></article><article class="help-card"><h4>Power</h4><p>Measures how quickly energy is transferred or work is done, such as watts and horsepower.</p></article><article class="help-card"><h4>Time</h4><p>Converts durations, from milliseconds and seconds to minutes, hours, days and years.</p></article><article class="help-card"><h4>Frequency</h4><p>Measures how often something repeats each second, in hertz and larger multiples.</p></article><article class="help-card"><h4>Force</h4><p>Measures a push or pull, commonly in newtons, kilonewtons and pound-force.</p></article><article class="help-card"><h4>Torque</h4><p>Measures the turning effect of a force, commonly newton-metres and pound-feet.</p></article><article class="help-card"><h4>Angle</h4><p>Measures rotation or direction, usually in degrees or radians.</p></article><article class="help-card"><h4>Density</h4><p>Measures mass per unit of volume, useful for comparing how compact a material is.</p></article><article class="help-card"><h4>Fuel Consumption</h4><p>Compares how much fuel a vehicle uses over a distance, such as L/100 km or miles per gallon. Some units are inverse scales.</p></article><article class="help-card"><h4>Flow</h4><p>Measures how much fluid passes a point over time, for example litres per minute, cubic metres per second or gallons per minute.</p></article><article class="help-card"><h4>Voltage</h4><p>Measures electrical potential difference, the electrical 'push' that can drive current; measured in volts.</p></article><article class="help-card"><h4>Current</h4><p>Measures the rate of electric charge flow, in amperes (amps) and smaller units.</p></article><article class="help-card"><h4>Resistance</h4><p>Measures how strongly a material or component opposes electric current, in ohms.</p></article><article class="help-card"><h4>Illuminance</h4><p>Measures how much light reaches a surface, commonly in lux or foot-candles.</p></article><article class="help-card"><h4>Data Rate</h4><p>Measures how quickly digital data is transferred, such as bits per second, kilobits per second, megabits per second or bytes per second.</p></article></div>
@@ -294,7 +325,7 @@
                     <article class="help-card"><h4>Metric prefixes</h4><p>kilo means 1,000; mega 1,000,000; giga 1,000,000,000. Binary prefixes such as kibi, mebi and gibi use powers of 1,024.</p></article>
                 </div>
             </div>
-            <footer class="help-footer"><span>Workbench v5.5 · Help & Tool Guide</span><a href="https://github.com/QuantumVexor1/Workbench" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-blue-300 hover:text-blue-200 underline"><svg aria-hidden="true" viewBox="0 0 24 24" class="w-4 h-4" fill="currentColor"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.54v-2.08c-3.1.67-3.76-1.32-3.76-1.32-.5-1.28-1.23-1.62-1.23-1.62-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15.99 1.7 2.6 1.21 3.23.93.1-.72.39-1.21.7-1.49-2.47-.28-5.07-1.24-5.07-5.5 0-1.22.44-2.21 1.15-2.99-.12-.28-.5-1.42.11-2.95 0 0 .94-.3 3.05 1.14a10.6 10.6 0 0 1 5.55 0c2.11-1.44 3.05-1.14 3.05-1.14.61 1.53.23 2.67.11 2.95.72.78 1.15 1.77 1.15 2.99 0 4.27-2.6 5.21-5.08 5.49.4.35.75 1.02.75 2.06v3.06c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/></svg><span>GitHub: QuantumVexor1/Workbench</span></a></footer>
+            <footer class="help-footer"><span>Workbench v6.3 · Help & Tool Guide</span><a href="https://github.com/QuantumVexor1/Workbench" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-blue-300 hover:text-blue-200 underline"><svg aria-hidden="true" viewBox="0 0 24 24" class="w-4 h-4" fill="currentColor"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.55.1.76-.24.76-.54v-2.08c-3.1.67-3.76-1.32-3.76-1.32-.5-1.28-1.23-1.62-1.23-1.62-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15.99 1.7 2.6 1.21 3.23.93.1-.72.39-1.21.7-1.49-2.47-.28-5.07-1.24-5.07-5.5 0-1.22.44-2.21 1.15-2.99-.12-.28-.5-1.42.11-2.95 0 0 .94-.3 3.05 1.14a10.6 10.6 0 0 1 5.55 0c2.11-1.44 3.05-1.14 3.05-1.14.61 1.53.23 2.67.11 2.95.72.78 1.15 1.77 1.15 2.99 0 4.27-2.6 5.21-5.08 5.49.4.35.75 1.02.75 2.06v3.06c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/></svg><span>GitHub: QuantumVexor1/Workbench</span></a></footer>
         </section>
     </div>
 
@@ -305,10 +336,11 @@
                 <div></div><div></div><div></div>
                 <div></div><div></div><div></div>
             </div>
-            <h1 class="text-xl font-extrabold tracking-tighter">WORKBENCH <span class="text-xs font-light text-blue-400">v5.5</span></h1>
+            <div><h1 class="text-xl font-extrabold tracking-tighter">WORKBENCH <span class="text-xs font-light text-blue-400">v6.3</span></h1><div class="text-[9px] text-slate-500 mt-0.5">QuantumVexor1, 2026</div></div>
         </div>
 
         
+        <div class="mobile-sidebar-search"><div class="relative"><input id="mobile-tool-search" type="search" oninput="app.handleGlobalSearch(this.value, true)" onkeydown="app.handleSearchKeydown(event, true)" placeholder="Search tools…" class="w-full p-3 pl-9 rounded-xl bg-slate-900 border border-white/10 text-sm"><i data-lucide="search" class="absolute left-3 top-3.5 w-4 h-4 text-slate-400"></i><div id="mobile-tool-search-results" class="hidden rounded-xl border border-white/10 shadow-2xl mt-1"></div></div></div>
         <div class="shrink-0 mb-2 pb-2 border-b border-white/15">
 <button onclick="app.showSection('home')" class="nav-btn w-full flex flex-col items-start p-3 rounded-xl active-tab" id="btn-home">
                 <div class="flex items-center gap-3"><i data-lucide="house" class="w-4"></i><span class="text-sm">Home</span></div>
@@ -318,6 +350,10 @@
 <nav class="flex-1 min-h-0 space-y-1 overflow-y-auto custom-scroll pr-1"><button onclick="app.showSection('calc')" class="nav-btn w-full flex flex-col items-start p-3 rounded-xl active-tab" id="btn-calc">
                 <div class="flex items-center gap-3"><i data-lucide="calculator" class="w-4"></i><span class="text-sm">Calculator</span></div>
                 <span class="text-[9px] text-slate-400">Precision & Finance</span>
+            </button>
+            <button onclick="app.showSection('chemistry')" class="nav-btn w-full flex flex-col items-start p-3 rounded-xl" id="btn-chemistry">
+                <div class="flex items-center gap-3"><i data-lucide="flask-conical" class="w-4"></i><span class="text-sm">Chemistry</span></div>
+                <span class="text-[9px] text-slate-400">Periodic table & calculators</span>
             </button>
             <button onclick="app.showSection('calendar')" class="nav-btn w-full flex flex-col items-start p-3 rounded-xl" id="btn-calendar">
                 <div class="flex items-center gap-3"><i data-lucide="calendar" class="w-4"></i><span class="text-sm">Calendar</span></div>
@@ -347,6 +383,10 @@
                 <div class="flex items-center gap-3"><i data-lucide="file-text" class="w-4"></i><span class="text-sm">PDF Toolbox</span></div>
                 <span class="text-[9px] text-slate-400">Edit & Annotate</span>
             </button>
+            <button onclick="app.showSection('physics')" class="nav-btn w-full flex flex-col items-start p-3 rounded-xl" id="btn-physics">
+                <div class="flex items-center gap-3"><i data-lucide="atom" class="w-4"></i><span class="text-sm">Physics</span></div>
+                <span class="text-[9px] text-slate-400">Physical calculator & formulas</span>
+            </button>
             <button onclick="app.showSection('random')" class="nav-btn w-full flex flex-col items-start p-3 rounded-xl" id="btn-random">
                 <div class="flex items-center gap-3"><i data-lucide="dices" class="w-4"></i><span class="text-sm">Random</span></div>
                 <span class="text-[9px] text-slate-400">Luck & Choice</span>
@@ -371,12 +411,13 @@
 
         <div class="mt-auto pt-3 border-t border-white/10">
             <div class="sidebar-action-row">
-                <button onclick="app.openHelp()" class="help-button" title="Open Help"><i data-lucide="circle-help" class="w-4 h-4"></i><span>Help?</span></button>
+                <button onclick="app.openHelp()" class="help-button" title="Open Help"><i data-lucide="circle-help" class="w-4 h-4"></i><span data-help-label>Help</span></button>
+                <div class="language-switch device-mode-switch" role="group" aria-label="Display mode"><button id="mode-desktop" type="button" onclick="app.toggleDeviceMode(false)" title="Desktop mode" aria-label="Desktop mode"><i data-lucide="monitor" class="w-4 h-4"></i></button><button id="mode-phone" type="button" onclick="app.toggleDeviceMode(true)" title="Smartphone mode" aria-label="Smartphone mode"><i data-lucide="smartphone" class="w-4 h-4"></i></button></div>
                 <div class="language-switch" role="group" aria-label="Language">
                     <button id="lang-en" class="language-active" onclick="app.setLanguage('en')">EN</button>
                     <button id="lang-de" onclick="app.setLanguage('de')">DE</button>
                 </div>
-                <div class="sidebar-credit">QuantumVexor1, 2026</div>
+
             </div>
             <div class="backup-split backup-triple mt-3">
                 <button onclick="app.exportAllData()" title="Export all data" class="flex items-center justify-center gap-1 p-2 bg-emerald-900/40 text-emerald-300 hover:bg-emerald-800/60">
@@ -394,7 +435,8 @@
         <div id="sidebar-resize-handle" role="separator" aria-orientation="vertical" aria-label="Resize sidebar to the right" tabindex="0" title="Drag right to widen sidebar"></div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto custom-scroll p-6 relative">
+    <button id="mobile-menu-toggle" class="mobile-menu-toggle" type="button" onclick="app.toggleMobileSidebar()" aria-label="Open sidebar" aria-expanded="false"></button>
+    <main id="main-content" class="flex-1 overflow-y-auto custom-scroll p-6 relative">
 
         <div class="mb-6 max-w-2xl mx-auto">
             <div class="relative">
@@ -410,7 +452,7 @@
         <section id="home" class="section space-y-6">
             <div class="flex flex-wrap items-end justify-between gap-3">
                 <div><h2 class="text-3xl font-bold">Home</h2><p class="text-sm text-slate-400 mt-1">Your tasks, events, balance and time tools in one place.</p></div>
-                <div class="text-xs text-slate-500" id="home-date"></div>
+                <div class="flex items-center gap-2 text-xs text-slate-400"><span id="home-clock" class="font-mono text-sm text-blue-300">--:--:--</span><span id="home-date"></span><select id="home-timezone" class="max-w-[155px] bg-slate-900 border border-slate-700 rounded-lg px-2 py-1" aria-label="Time zone" onchange="app.saveTimezone(this.value)"><option value="Europe/London">London</option><option value="Europe/Berlin">Berlin</option><option value="Europe/Paris">Paris</option><option value="Europe/Rome">Rome</option><option value="Europe/Madrid">Madrid</option><option value="Europe/Athens">Athens</option><option value="America/New_York">New York</option><option value="America/Chicago">Chicago</option><option value="America/Denver">Denver</option><option value="America/Los_Angeles">Los Angeles</option><option value="Asia/Dubai">Dubai</option><option value="Asia/Kolkata">Kolkata</option><option value="Asia/Singapore">Singapore</option><option value="Asia/Tokyo">Tokyo</option><option value="Australia/Sydney">Sydney</option><option value="UTC">UTC</option></select></div>
             </div>
             <div class="grid grid-cols-1 xl:grid-cols-[2fr_3fr] gap-4 items-stretch">
                 <div class="glass rounded-2xl p-5 flex items-center justify-between gap-3 min-w-0">
@@ -425,7 +467,7 @@
                         <button onclick="app.appendHomeCalc('7')" class="p-2 text-sm bg-slate-800 rounded-lg font-bold">7</button><button onclick="app.appendHomeCalc('8')" class="p-2 text-sm bg-slate-800 rounded-lg font-bold">8</button><button onclick="app.appendHomeCalc('9')" class="p-2 text-sm bg-slate-800 rounded-lg font-bold">9</button><button onclick="app.appendHomeCalc('+')" class="p-2 text-sm bg-slate-700 rounded-lg font-bold">+</button>
                         <button onclick="app.appendHomeCalc('4')" class="p-2 text-sm bg-slate-800 rounded-lg font-bold">4</button><button onclick="app.appendHomeCalc('5')" class="p-2 text-sm bg-slate-800 rounded-lg font-bold">5</button><button onclick="app.appendHomeCalc('6')" class="p-2 text-sm bg-slate-800 rounded-lg font-bold">6</button><button onclick="app.appendHomeCalc('.')" class="p-2 text-sm bg-slate-700 rounded-lg font-bold">.</button>
                         <button onclick="app.appendHomeCalc('1')" class="p-2 text-sm bg-slate-800 rounded-lg font-bold">1</button><button onclick="app.appendHomeCalc('2')" class="p-2 text-sm bg-slate-800 rounded-lg font-bold">2</button><button onclick="app.appendHomeCalc('3')" class="p-2 text-sm bg-slate-800 rounded-lg font-bold">3</button><button onclick="app.calculateHomeBasic()" class="p-2 text-sm bg-blue-600 rounded-lg font-bold row-span-2">=</button>
-                        <button onclick="app.appendHomeCalc('0')" class="p-2 text-sm bg-slate-800 rounded-lg font-bold col-span-2">0</button><button onclick="app.appendHomeCalc('(')" class="p-2 text-sm bg-slate-700 rounded-lg font-bold">(</button>
+                        <button onclick="app.appendHomeCalc('0')" class="p-2 text-sm bg-slate-800 rounded-lg font-bold col-span-2">0</button><button onclick="app.appendHomeCalc('(')" class="p-2 text-sm bg-slate-700 rounded-lg font-bold">(</button><button onclick="app.appendHomeCalc(')')" class="p-2 text-sm bg-slate-700 rounded-lg font-bold">)</button>
                     </div>
                 </div>
             </div>
@@ -487,7 +529,7 @@
         <section id="calc" class="section hidden-section space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="glass p-5 rounded-2xl lg:col-span-2">
-                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4"><h3 class="text-lg font-bold text-blue-400">Universal Converter</h3><button onclick="app.openFormulaLibrary()" class="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-sm font-bold">∑ <span data-formula-label>Formula collection</span></button></div>
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-4"><h3 class="text-lg font-bold text-blue-400">Universal Converter</h3><button type="button" onclick="app.openFormulaLibrary()" class="px-3 py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-xs font-bold">∑ Formula collection</button></div>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
                         <div class="space-y-1">
                             <label class="text-[10px] text-slate-400">Input Value</label>
@@ -501,6 +543,7 @@
                             <label class="text-[10px] text-slate-400">Category</label>
                             <select id="conv-cat" class="w-full p-3 rounded-xl bg-slate-900 border border-white/10" onchange="app.updateConvUnits()">
                                 <option value="length">Length</option>
+                                <option value="shoe_size">Shoe Sizes (approx.)</option>
                                 <option value="weight">Weight</option>
                                 <option value="volume">Volume</option>
                                 <option value="speed">Speed</option>
@@ -554,12 +597,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="glass p-5 rounded-2xl lg:col-span-2" id="physical-calculator-panel">
-                    <div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><h3 class="text-lg font-bold text-cyan-300" data-phys-title>Physical calculator</h3><p class="text-xs text-slate-400" data-phys-subtitle>Combine up to four physical quantities with selectable operations.</p></div><button type="button" onclick="app.openFormulaLibrary()" class="px-3 py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-xs font-bold" data-phys-formulas>∑ Formula collection</button></div>
-                    <div class="overflow-x-auto custom-scroll pb-3"><div id="physical-calculator-row" class="flex items-end gap-2 min-w-max"></div></div>
-                    <div class="flex flex-wrap items-center gap-3 mt-3"><div class="flex items-center gap-2"><label class="text-xs text-slate-400" data-phys-output-label>Output</label><select id="physical-output-category" class="max-w-[170px] p-2 rounded-lg bg-slate-900 border border-white/10 text-xs"><option value="auto">Auto</option></select><select id="physical-output-unit" class="max-w-[110px] p-2 rounded-lg bg-slate-900 border border-white/10 text-xs"><option value="base">Base unit</option></select></div><button type="button" onclick="app.calculatePhysical()" class="px-5 py-3 rounded-xl bg-cyan-700 hover:bg-cyan-600 font-bold" data-phys-calculate>Calculate</button><button type="button" onclick="app.resetPhysical()" class="px-4 py-3 rounded-xl bg-slate-700 font-semibold" data-phys-reset>Reset</button><div id="physical-calculator-result" class="flex-1 min-w-[240px] p-3 rounded-xl bg-slate-950 border border-cyan-500/30 text-cyan-200 font-semibold" aria-live="polite" data-phys-result>Result will appear here.</div></div>
-                    <p class="text-xs text-slate-500 mt-2" data-phys-note>Addition and subtraction require matching physical dimensions. Multiplication and division combine dimensions; the result can be converted to a matching category and unit. Select None for ordinary arithmetic.</p>
-                </div>
+
                 <div class="glass p-5 rounded-2xl">
                     <h3 class="text-lg mb-4 font-bold">Basic Calculator</h3>
                     <input type="text" id="basic-display" inputmode="decimal" autocomplete="off" class="w-full bg-slate-950 p-3 text-right text-3xl mb-4 rounded-xl border border-slate-700 font-mono">
@@ -580,6 +618,10 @@
                         <button onclick="app.appendBasic('.')" class="p-3 bg-slate-800 rounded-xl font-bold">.</button>
                         <button onclick="app.clearCalc('basic')" class="p-3 bg-red-900/40 rounded-xl font-bold">C</button>
                         <button onclick="app.appendBasic('+')" class="p-3 bg-slate-700 rounded-xl font-bold">+</button>
+                        <button onclick="app.appendBasic('(')" class="p-3 bg-slate-700 rounded-xl font-bold">(</button>
+                        <button onclick="app.appendBasic(')')" class="p-3 bg-slate-700 rounded-xl font-bold">)</button>
+                        <button onclick="app.appendBasic('%')" class="p-3 bg-slate-700 rounded-xl font-bold">%</button>
+                        <button onclick="app.appendBasic('**')" class="p-3 bg-slate-700 rounded-xl font-bold">xⁿ</button>
                         <button onclick="app.calculateBasic()" class="col-span-4 p-3 bg-blue-600 rounded-xl font-bold">=</button>
                     </div>
                 </div>
@@ -615,9 +657,31 @@
                     </div>
                 </div>
             </div>
+            <div class="glass p-5 rounded-2xl mt-5 space-y-4" id="equation-solver">
+                <div><h3 class="text-lg font-bold text-blue-400" data-i18n="Equation Solver">Equation Solver</h3><p class="text-xs text-slate-400" data-i18n="Solve a linear or quadratic equation in the form ax² + bx + c = 0.">Solve a linear or quadratic equation in the form ax² + bx + c = 0.</p></div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <label class="text-xs text-slate-400"><span data-i18n="Coefficient a">Coefficient a</span><input id="eq-a" type="number" step="any" placeholder="e.g. 1" class="block w-full mt-1 p-3 rounded-xl bg-slate-950 border border-slate-700 text-white"></label>
+                    <label class="text-xs text-slate-400"><span data-i18n="Coefficient b">Coefficient b</span><input id="eq-b" type="number" step="any" placeholder="e.g. -5" class="block w-full mt-1 p-3 rounded-xl bg-slate-950 border border-slate-700 text-white"></label>
+                    <label class="text-xs text-slate-400"><span data-i18n="Coefficient c">Coefficient c</span><input id="eq-c" type="number" step="any" placeholder="e.g. 6" class="block w-full mt-1 p-3 rounded-xl bg-slate-950 border border-slate-700 text-white"></label>
+                </div>
+                <div class="flex flex-wrap gap-2"><button onclick="app.solveEquation()" class="px-5 py-2 rounded-xl bg-blue-600 font-bold" data-i18n="Solve equation">Solve equation</button><button onclick="app.resetEquationSolver()" class="px-5 py-2 rounded-xl bg-slate-700" data-i18n="Reset">Reset</button></div>
+                <div id="equation-result" class="p-3 rounded-xl bg-slate-950 border border-white/10 text-cyan-200 text-sm min-h-12" aria-live="polite" data-i18n="Enter coefficients and solve to see the roots.">Enter coefficients and solve to see the roots.</div>
+                <p class="text-[11px] text-slate-500" data-i18n="If a is zero, the solver treats the equation as linear. A negative discriminant produces complex roots.">If a is zero, the solver treats the equation as linear. A negative discriminant produces complex roots.</p>
+            </div>
         </section>
 
         <!-- Section: Calendar -->
+        <section id="chemistry" class="section hidden-section space-y-6">
+            <div class="flex flex-wrap items-end justify-between gap-3"><div><h2 class="text-3xl font-bold" data-chem-title>Chemistry</h2><p class="text-sm text-slate-400 mt-1" data-chem-intro>Explore elements and solve common chemistry calculations.</p></div><button onclick="app.openPeriodicTable()" class="px-4 py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-sm font-bold">▦ <span data-chem-open-periodic>Open periodic table</span></button></div>
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+                <article class="glass rounded-2xl p-5 space-y-3"><div><h3 class="font-bold text-cyan-300" data-chem-molar-title>Molar mass calculator</h3><p class="text-xs text-slate-400" data-chem-molar-desc>Enter a chemical formula, e.g. H2O, Ca(OH)2 or Al2(SO4)3.</p></div><label class="block text-xs text-slate-400" for="chem-formula" data-chem-formula-label>Chemical formula</label><input id="chem-formula" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-3 font-mono" placeholder="e.g. H2O"><button onclick="app.calculateMolarMass()" class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 font-bold text-sm" data-chem-calc-molar>Calculate molar mass</button><div class="flex items-stretch gap-2"><div class="flex-1 min-w-0"><div id="chem-molar-result" class="rounded-xl bg-slate-950/70 p-3 text-cyan-200 text-sm" aria-live="polite">—</div></div><button type="button" onclick="app.resetChemistryFields(['chem-formula'], 'chem-molar-result')" class="shrink-0 self-stretch px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold" data-chem-reset>↺ <span data-chem-reset-label>Reset</span></button></div></article>
+                <article class="glass rounded-2xl p-5 space-y-3"><div><h3 class="font-bold text-emerald-300" data-chem-amount-title>Amount of substance calculator</h3><p class="text-xs text-slate-400" data-chem-amount-desc>Calculate mass, amount of substance or molar mass.</p></div><div class="grid grid-cols-1 sm:grid-cols-3 gap-2"><div class="min-w-0"><label for="chem-mass" class="block text-xs text-slate-300 mb-1">Mass (g)</label><input id="chem-mass" type="number" inputmode="decimal" min="0" step="any" autocomplete="off" class="block w-full min-h-11 bg-slate-950 text-white border border-slate-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g. 18"></div><div class="min-w-0"><label for="chem-moles" class="block text-xs text-slate-300 mb-1">Amount (mol)</label><input id="chem-moles" type="number" inputmode="decimal" min="0" step="any" autocomplete="off" class="block w-full min-h-11 bg-slate-950 text-white border border-slate-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g. 1"></div><div class="min-w-0"><label for="chem-mm" class="block text-xs text-slate-300 mb-1">Molar mass (g/mol)</label><input id="chem-mm" type="number" inputmode="decimal" min="0" step="any" autocomplete="off" class="block w-full min-h-11 bg-slate-950 text-white border border-slate-600 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="e.g. 18.015"></div></div><button onclick="app.calculateMoles()" class="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 font-bold text-sm" data-chem-calc-amount>Calculate missing value</button><div class="flex items-stretch gap-2"><div class="flex-1 min-w-0"><div id="chem-amount-result" class="rounded-xl bg-slate-950/70 p-3 text-emerald-200 text-sm" aria-live="polite">—</div></div><button type="button" onclick="app.resetChemistryFields(['chem-mass', 'chem-moles', 'chem-mm'], 'chem-amount-result')" class="shrink-0 self-stretch px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold" data-chem-reset>↺ <span data-chem-reset-label>Reset</span></button></div></article>
+                <article class="glass rounded-2xl p-5 space-y-3"><h3 class="font-bold text-amber-300" data-chem-conc-title>Concentration calculator</h3><p class="text-xs text-slate-400" data-chem-conc-desc>Mass concentration = solute mass / solution volume.</p><div class="grid grid-cols-2 gap-2"><div class="min-w-0"><label for="chem-solute" class="block text-xs text-slate-300 mb-1">Solute mass (g)</label><input id="chem-solute" type="number" inputmode="decimal" min="0" step="any" autocomplete="off" class="block w-full min-h-11 bg-slate-950 text-white border border-slate-600 rounded-lg p-3"></div><div class="min-w-0"><label for="chem-solution-volume" class="block text-xs text-slate-300 mb-1">Solution volume (L)</label><input id="chem-solution-volume" type="number" inputmode="decimal" min="0" step="any" autocomplete="off" class="block w-full min-h-11 bg-slate-950 text-white border border-slate-600 rounded-lg p-3"></div></div><button onclick="app.calculateConcentration()" class="px-4 py-2 rounded-xl bg-amber-700 hover:bg-amber-600 font-bold text-sm" data-chem-calc-conc>Calculate concentration</button><div class="flex items-stretch gap-2"><div class="flex-1 min-w-0"><div id="chem-conc-result" class="rounded-xl bg-slate-950/70 p-3 text-amber-200 text-sm" aria-live="polite">—</div></div><button type="button" onclick="app.resetChemistryFields(['chem-solute', 'chem-solution-volume'], 'chem-conc-result')" class="shrink-0 self-stretch px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold" data-chem-reset>↺ <span data-chem-reset-label>Reset</span></button></div></article>
+                <article class="glass rounded-2xl p-5 space-y-3"><h3 class="font-bold text-violet-300" data-chem-density-title>Density calculator</h3><p class="text-xs text-slate-400" data-chem-density-desc>Density = mass / volume.</p><div class="grid grid-cols-2 gap-2"><div class="min-w-0"><label for="chem-density-mass" class="block text-xs text-slate-300 mb-1">Mass (g)</label><input id="chem-density-mass" type="number" inputmode="decimal" min="0" step="any" autocomplete="off" class="block w-full min-h-11 bg-slate-950 text-white border border-slate-600 rounded-lg p-3"></div><div class="min-w-0"><label for="chem-density-volume" class="block text-xs text-slate-300 mb-1">Volume (cm³)</label><input id="chem-density-volume" type="number" inputmode="decimal" min="0" step="any" autocomplete="off" class="block w-full min-h-11 bg-slate-950 text-white border border-slate-600 rounded-lg p-3"></div></div><button onclick="app.calculateDensity()" class="px-4 py-2 rounded-xl bg-violet-700 hover:bg-violet-600 font-bold text-sm" data-chem-calc-density>Calculate density</button><div class="flex items-stretch gap-2"><div class="flex-1 min-w-0"><div id="chem-density-result" class="rounded-xl bg-slate-950/70 p-3 text-violet-200 text-sm" aria-live="polite">—</div></div><button type="button" onclick="app.resetChemistryFields(['chem-density-mass', 'chem-density-volume'], 'chem-density-result')" class="shrink-0 self-stretch px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-xs font-bold" data-chem-reset>↺ <span data-chem-reset-label>Reset</span></button></div></article>
+            </div>
+            <article class="glass rounded-2xl p-5"><h3 class="font-bold text-blue-300 mb-2" data-chem-extra-title>Quick chemistry reference</h3><div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3 text-sm"><div class="rounded-xl bg-slate-950/60 p-3"><b>n = m / M</b><p class="text-slate-400 mt-1" data-chem-ref-moles>Amount of substance (mol) = mass (g) / molar mass (g/mol)</p></div><div class="rounded-xl bg-slate-950/60 p-3"><b>cₘ = m / V</b><p class="text-slate-400 mt-1" data-chem-ref-massconc>Mass concentration (g/L) = solute mass (g) / solution volume (L)</p></div><div class="rounded-xl bg-slate-950/60 p-3"><b>c = n / V</b><p class="text-slate-400 mt-1" data-chem-ref-conc>Molar concentration (mol/L) = amount (mol) / solution volume (L)</p></div><div class="rounded-xl bg-slate-950/60 p-3"><b>ρ = m / V</b><p class="text-slate-400 mt-1" data-chem-ref-density>Density (g/cm³) = mass (g) / volume (cm³)</p></div></div></article>
+        </section>
+
         <section id="calendar" class="section hidden-section space-y-6">
             <div class="flex justify-between items-center">
                 <h2 class="text-3xl font-bold">Calendar</h2>
@@ -639,7 +703,7 @@
                         </div>
                     </div>
                     <div class="glass p-5 rounded-2xl">
-                        <h3 class="mb-3 font-bold text-blue-400">Events List</h3>
+                        <div class="flex flex-wrap justify-between items-center gap-2 mb-3"><h3 class="font-bold text-blue-400">Events List</h3><div class="flex gap-2"><button onclick="app.exportCalendarICS()" class="px-3 py-1.5 rounded-lg bg-emerald-700 text-xs font-bold">Export .ics</button><button onclick="document.getElementById('calendar-ics-import').click()" class="px-3 py-1.5 rounded-lg bg-blue-700 text-xs font-bold">Import .ics</button><input id="calendar-ics-import" type="file" accept=".ics,text/calendar" class="hidden" onchange="app.importCalendarICS(event)"></div></div>
                         <div class="max-h-64 overflow-y-auto custom-scroll">
                             <table class="w-full text-left border-collapse text-xs">
                                 <thead class="sticky top-0 bg-slate-800">
@@ -778,7 +842,7 @@
             <h2 class="text-3xl font-bold">Time Management</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="glass p-5 rounded-2xl flex flex-col justify-center">
-                    <h3 class="text-lg font-bold mb-4 text-blue-400">Stopwatch</h3>
+                    <h3 class="text-lg font-bold mb-2 mt-0 self-start leading-tight text-blue-400">Stopwatch</h3>
                     <div class="mb-6">
                         <div id="stopwatch-display" class="text-5xl font-mono mb-4 text-center w-full tabular-nums">00.00.00.00</div>
                         <div class="flex justify-center gap-4">
@@ -802,6 +866,7 @@
                         <label class="flex flex-col gap-1"><input type="number" min="0" max="999" id="timer-ms" class="w-full p-2 rounded bg-slate-900 text-center" placeholder="00"><span class="text-[9px] text-slate-400 text-center">ms</span></label>
                     </div>
                     <div id="timer-display" class="text-5xl font-mono mb-6 text-center w-full tabular-nums">00:00.00</div>
+                    <div class="flex flex-wrap items-center justify-center gap-4 mb-4 text-xs text-slate-300"><label class="inline-flex items-center gap-2"><input id="timer-sound-enabled" type="checkbox" checked> Play sound when finished</label><button type="button" onclick="app.enableTimerNotifications()" class="px-3 py-1.5 rounded-lg bg-slate-700 hover:bg-slate-600">Enable PC notifications</button><span id="timer-notification-status" class="text-slate-500">Notifications optional</span></div>
                     <div class="flex gap-2 justify-center">
                         <button onclick="app.startTimer()" class="bg-blue-600 px-6 py-2 rounded-xl font-bold">Start</button>
                         <button onclick="app.stopTimer()" class="bg-orange-600 px-6 py-2 rounded-xl font-bold">Stop</button>
@@ -884,7 +949,7 @@
         <section id="editor" class="section hidden-section space-y-6">
             <h2 class="text-3xl font-bold">Text Editor</h2>
             <div class="glass p-5 rounded-2xl">
-                <div class="editor-toolbar flex flex-wrap gap-2 mb-4">
+                <div class="flex justify-end mb-2"><div id="text-word-count" class="text-xs text-slate-400" aria-live="polite">0 words</div></div><div class="editor-toolbar flex flex-wrap gap-2 mb-4">
                     <button onmousedown="event.preventDefault(); app.execEdit('bold')"><b class="font-bold">B</b></button>
                     <button onmousedown="event.preventDefault(); app.execEdit('italic')"><i class="italic">I</i></button>
                     <button onmousedown="event.preventDefault(); app.execEdit('underline')"><u class="underline">U</u></button>
@@ -905,7 +970,7 @@
                     <button type="button" onclick="app.exportText('txt')" class="px-3 py-1 text-xs rounded bg-slate-700 hover:bg-slate-600">Export .txt</button>
                     <button type="button" onclick="app.exportText('docx')" class="px-3 py-1 text-xs rounded bg-slate-700 hover:bg-slate-600">Export .docx</button>
                 </div>
-                <div id="text-editor-area" contenteditable="true" style="white-space: pre-wrap" class="w-full min-h-[400px] p-4 bg-slate-950 rounded-xl border border-white/5 outline-none text-lg" placeholder="Start typing here..."></div>
+                <div id="text-editor-area" contenteditable="true" oninput="app.updateWordCount()" onkeyup="app.updateWordCount()" style="white-space: pre-wrap" class="w-full min-h-[400px] p-4 bg-slate-950 rounded-xl border border-white/5 outline-none text-lg" placeholder="Start typing here..."></div>
             </div>
         </section>
 
@@ -915,9 +980,11 @@
             <div class="glass p-5 rounded-2xl space-y-6">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="p-4 border border-white/5 rounded-xl bg-slate-900/50">
-                        <h3 class="font-bold mb-3 text-sm text-blue-400">Upload Document</h3>
+                        <h3 class="font-bold mb-3 text-sm text-blue-400">Upload or scan</h3>
                         <input type="file" id="pdf-upload" accept="image/*" class="w-full text-xs mb-2">
-                        <p class="text-[10px] text-slate-500">Annotate images (PNG, JPG, WebP). PDF pages: export them as images first.</p>
+                        <div class="flex flex-wrap gap-2 mt-2"><button type="button" onclick="app.startPDFCamera()" class="px-3 py-2 rounded-lg bg-blue-700 text-xs">Open camera</button><button type="button" onclick="app.capturePDFCamera()" class="px-3 py-2 rounded-lg bg-emerald-700 text-xs">Capture</button><button type="button" onclick="app.stopPDFCamera()" class="px-3 py-2 rounded-lg bg-slate-700 text-xs">Stop camera</button></div>
+                        <select id="pdf-camera-select" class="w-full mt-2 p-2 rounded-lg bg-slate-950 text-xs"><option value="">Default camera</option></select><video id="pdf-camera-video" autoplay playsinline class="hidden w-full mt-2 rounded-lg"></video>
+                        <p class="text-[10px] text-slate-500 mt-2">The camera starts only when you press Open camera. Capture a page, then export it.</p>
                     </div>
                     <div class="p-4 border border-white/5 rounded-xl bg-slate-900/50 md:col-span-2">
                         <h3 class="font-bold mb-3 text-sm text-blue-400">Annotation Tools</h3>
@@ -939,7 +1006,7 @@
                             <div class="flex items-center gap-2 ml-4">
                                 <button onclick="app.pdfUndo()" class="p-1 bg-slate-800 rounded"><i data-lucide="undo" class="w-4"></i></button>
                                 <button onclick="app.pdfRedo()" class="p-1 bg-slate-800 rounded"><i data-lucide="redo" class="w-4"></i></button>
-                                <button onclick="app.pdfDownload()" class="px-2 py-1 bg-blue-600 rounded text-xs font-bold">Save PNG</button>
+                                <select id="pdf-export-format" class="p-1 bg-slate-800 rounded text-xs"><option value="image/png">PNG</option><option value="image/jpeg">JPG</option><option value="image/webp">WebP</option><option value="application/pdf">PDF</option></select><button onclick="app.pdfDownload()" class="px-2 py-1 bg-blue-600 rounded text-xs font-bold">Export</button>
                             </div>
                         </div>
                     </div>
@@ -950,10 +1017,23 @@
             </div>
         </section>
 
+        <section id="physics" class="section hidden-section space-y-6"><h2 class="text-3xl font-bold">Physics</h2>                <div class="glass p-5 rounded-2xl lg:col-span-2" id="physical-calculator-panel">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mb-3"><div><h3 class="text-lg font-bold text-cyan-300" data-phys-title>Physical calculator</h3><p class="text-xs text-slate-400" data-phys-subtitle>Combine up to five physical quantities with selectable operations.</p></div><button type="button" onclick="app.openFormulaLibrary()" class="px-3 py-2 rounded-xl bg-purple-700 hover:bg-purple-600 text-xs font-bold" data-phys-formulas>∑ Formula collection</button></div>
+                    <div class="overflow-x-auto custom-scroll pb-3"><div id="physical-calculator-row" class="flex items-end gap-2 min-w-max"></div></div>
+                    <div class="flex flex-wrap items-center gap-3 mt-3"><div class="flex items-center gap-2"><label class="text-xs text-slate-400" data-phys-output-label>Output</label><select id="physical-output-category" class="max-w-[170px] p-2 rounded-lg bg-slate-900 border border-white/10 text-xs"><option value="auto">Auto</option></select><select id="physical-output-unit" class="max-w-[110px] p-2 rounded-lg bg-slate-900 border border-white/10 text-xs"><option value="base">Base unit</option></select></div><button type="button" onclick="app.calculatePhysical()" class="px-5 py-3 rounded-xl bg-cyan-700 hover:bg-cyan-600 font-bold order-1" data-phys-calculate>Calculate</button><div id="physical-calculator-result" class="flex-1 min-w-[240px] p-3 rounded-xl bg-slate-950 border border-cyan-500/30 text-cyan-200 font-semibold order-2" aria-live="polite" data-phys-result>Result will appear here.</div><button type="button" onclick="app.resetPhysical()" class="px-4 py-3 rounded-xl bg-slate-700 font-semibold order-3" data-phys-reset>Reset</button></div>
+                    <p class="text-xs text-slate-500 mt-2" data-phys-note>Addition and subtraction require matching physical dimensions. Multiplication and division combine dimensions; the result can be converted to a matching category and unit. Select None for ordinary arithmetic.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+                  <article class="glass rounded-2xl p-5 space-y-3"><h3 class="font-bold text-cyan-300" data-physics-tool="kinematics">Kinematics calculator</h3><p class="text-xs text-slate-400" data-physics-desc="kinematics">Calculate final velocity from initial velocity, acceleration and time.</p><div class="grid grid-cols-3 gap-2"><label class="text-xs">v₀ (m/s)<input id="kin-v0" type="number" step="any" class="w-full p-2 rounded bg-slate-950 border border-white/10" placeholder="e.g. 0"></label><label class="text-xs">a (m/s²)<input id="kin-a" type="number" step="any" class="w-full p-2 rounded bg-slate-950 border border-white/10" placeholder="e.g. 2"></label><label class="text-xs">t (s)<input id="kin-t" type="number" step="any" class="w-full p-2 rounded bg-slate-950 border border-white/10" placeholder="e.g. 5"></label></div><button onclick="app.physicsKinematics()" class="px-3 py-2 rounded-lg bg-cyan-700 text-sm" data-physics-calc>Calculate</button><output id="kin-result" class="block text-sm text-cyan-200" aria-live="polite">—</output></article>
+                  <article class="glass rounded-2xl p-5 space-y-3"><h3 class="font-bold text-cyan-300" data-physics-tool="ohm">Ohm's law calculator</h3><p class="text-xs text-slate-400" data-physics-desc="ohm">Enter voltage and resistance to calculate current and power.</p><div class="grid grid-cols-2 gap-2"><label class="text-xs">U (V)<input id="ohm-u" type="number" step="any" class="w-full p-2 rounded bg-slate-950 border border-white/10" placeholder="e.g. 12"></label><label class="text-xs">R (Ω)<input id="ohm-r" type="number" step="any" class="w-full p-2 rounded bg-slate-950 border border-white/10" placeholder="e.g. 6"></label></div><button onclick="app.physicsOhm()" class="px-3 py-2 rounded-lg bg-cyan-700 text-sm" data-physics-calc>Calculate</button><output id="ohm-result" class="block text-sm text-cyan-200" aria-live="polite">—</output></article>
+                  <article class="glass rounded-2xl p-5 space-y-3"><h3 class="font-bold text-cyan-300" data-physics-tool="density">Density calculator</h3><p class="text-xs text-slate-400" data-physics-desc="density">Density equals mass divided by volume.</p><div class="grid grid-cols-2 gap-2"><label class="text-xs">Mass (kg)<input id="density-m" type="number" step="any" class="w-full p-2 rounded bg-slate-950 border border-white/10" placeholder="e.g. 2"></label><label class="text-xs">Volume (m³)<input id="density-v" type="number" step="any" class="w-full p-2 rounded bg-slate-950 border border-white/10" placeholder="e.g. 0.001"></label></div><button onclick="app.physicsDensity()" class="px-3 py-2 rounded-lg bg-cyan-700 text-sm" data-physics-calc>Calculate</button><output id="density-result" class="block text-sm text-cyan-200" aria-live="polite">—</output></article>
+                  <article class="glass rounded-2xl p-5 space-y-3"><h3 class="font-bold text-cyan-300" data-physics-tool="wave">Wave calculator</h3><p class="text-xs text-slate-400" data-physics-desc="wave">Calculate wavelength from wave speed and frequency.</p><div class="grid grid-cols-2 gap-2"><label class="text-xs">Speed (m/s)<input id="wave-v" type="number" step="any" class="w-full p-2 rounded bg-slate-950 border border-white/10" placeholder="e.g. 340"></label><label class="text-xs">Frequency (Hz)<input id="wave-f" type="number" step="any" class="w-full p-2 rounded bg-slate-950 border border-white/10" placeholder="e.g. 170"></label></div><button onclick="app.physicsWave()" class="px-3 py-2 rounded-lg bg-cyan-700 text-sm" data-physics-calc>Calculate</button><output id="wave-result" class="block text-sm text-cyan-200" aria-live="polite">—</output></article>
+                </div></section>
+
         <!-- Section: HTML Viewer -->
         <section id="html" class="section hidden-section space-y-6">
             <h2 class="text-3xl font-bold">HTML Viewer</h2>
-            <div class="glass p-5 rounded-2xl h-[70vh] flex flex-col">
+            <div class="glass p-5 rounded-2xl h-[86vh] min-h-[680px] flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex gap-4">
                         <button onclick="app.setHtmlViewport('mobile')" class="p-2 bg-slate-800 rounded text-xs">Mobile</button>
@@ -962,7 +1042,7 @@
                     </div>
                 </div>
                 <div class="flex-1 flex flex-col md:flex-row gap-4 overflow-hidden">
-                    <textarea id="html-input" class="w-full md:w-[40%] p-3 rounded-xl bg-slate-900 border border-white/10 text-xs font-mono" oninput="app.previewHTML()" placeholder="Enter HTML/CSS/JS here..."></textarea>
+                    <textarea id="html-input" class="w-full md:w-[32%] min-h-[300px] p-3 rounded-xl bg-slate-900 border border-white/10 text-xs font-mono" oninput="app.previewHTML()" placeholder="Enter HTML/CSS/JS here..."></textarea>
                     <div class="flex-1 bg-white rounded-xl overflow-hidden border border-white/10">
                         <iframe id="html-preview" class="w-full h-full" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
                     </div>
@@ -1008,32 +1088,45 @@
         <!-- Section: Color Picker -->
         <section id="color" class="section hidden-section space-y-6">
             <h2 class="text-3xl font-bold">Colors</h2>
-            <div class="glass p-5 rounded-2xl max-w-lg mx-auto space-y-6">
-                <div class="flex flex-col items-center">
-                    <input type="color" id="cp-input" class="w-32 h-32 cursor-pointer border-4 border-slate-800 rounded-full" oninput="app.updateColorPicker(this.value)">
+            <div class="glass p-5 rounded-2xl w-full max-w-6xl mx-auto space-y-6">
+                <div class="grid grid-cols-2 gap-5">
+                    <div class="flex flex-col items-center gap-2"><label class="text-xs text-slate-400" for="cp-input" data-color-one>First color</label><input type="color" id="cp-input" value="#000000" class="w-28 h-28 cursor-pointer border-4 border-slate-800 rounded-full" oninput="app.updateColorPicker(this.value)"></div>
+                    <div class="flex flex-col items-center gap-2"><label class="text-xs text-slate-400" for="cp-input-two" data-color-two>Second color</label><input type="color" id="cp-input-two" value="#FFFFFF" class="w-28 h-28 cursor-pointer border-4 border-slate-800 rounded-full" oninput="app.updateColorPicker(this.value,'two')"></div>
                 </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
                 <div class="space-y-4">
                     <div class="p-3 bg-slate-900 rounded-xl">
                         <label class="text-[10px] text-slate-400 uppercase">Hex Code</label>
-                        <div id="cp-hex" class="text-2xl font-mono font-bold text-blue-400">#FFFFFF</div>
+                        <div id="cp-hex" class="text-2xl font-mono font-bold text-blue-400">#000000</div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="p-3 bg-slate-900 rounded-xl">
                             <label class="text-[10px] text-slate-400 uppercase">RGB</label>
-                            <div id="cp-rgb" class="text-lg font-mono">rgb(255, 255, 255)</div>
+                            <div id="cp-rgb" class="text-lg font-mono">rgb(0, 0, 0)</div>
                         </div>
                         <div class="p-3 bg-slate-900 rounded-xl">
                             <label class="text-[10px] text-slate-400 uppercase">HSL</label>
-                            <div id="cp-hsl" class="text-lg font-mono">hsl(0, 0%, 100%)</div>
+                            <div id="cp-hsl" class="text-lg font-mono">hsl(0, 0%, 0%)</div>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">CMYK</label><div id="cp-cmyk" class="text-sm font-mono">0%, 0%, 0%, 0%</div></div>
-                        <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">HSV / HSB</label><div id="cp-hsv" class="text-sm font-mono">0°, 0%, 100%</div></div>
-                        <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">Relative luminance</label><div id="cp-luminance" class="text-sm font-mono">1.000</div></div>
-                        <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">Best text contrast</label><div id="cp-contrast" class="text-sm font-mono">Black</div></div>
+                        <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">CMYK</label><div id="cp-cmyk" class="text-sm font-mono">0%, 0%, 0%, 100%</div></div>
+                        <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">HSV / HSB</label><div id="cp-hsv" class="text-sm font-mono">0°, 0%, 0%</div></div>
+                        <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">Relative luminance</label><div id="cp-luminance" class="text-sm font-mono">0.000</div></div>
+                        <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">Best text contrast</label><div id="cp-contrast" class="text-sm font-mono">White</div></div>
                     </div>
-                    <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">Complementary color</label><div class="flex items-center gap-3 mt-2"><div id="cp-complement-swatch" class="w-10 h-10 rounded-lg border border-white/20"></div><span id="cp-complement" class="font-mono text-sm">#000000</span></div></div>
+                    <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">Complementary color</label><div class="flex items-center gap-3 mt-2"><div id="cp-complement-swatch" class="w-10 h-10 rounded-lg border border-white/20"></div><span id="cp-complement" class="font-mono text-sm">#FFFFFF</span></div></div>
+                </div>
+                <div class="space-y-4"><h3 class="font-bold text-sm mb-3" data-second-details>Second color details</h3><div class="grid grid-cols-2 gap-3">
+                    <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">HEX</label><div id="cp2-hex" class="font-mono">#FFFFFF</div></div>
+                    <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">RGB</label><div id="cp2-rgb" class="font-mono text-sm">rgb(255, 255, 255)</div></div>
+                    <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">HSL</label><div id="cp2-hsl" class="font-mono text-sm">hsl(0, 0%, 100%)</div></div>
+                    <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">CMYK</label><div id="cp2-cmyk" class="font-mono text-sm">0%, 0%, 0%, 0%</div></div>
+                    <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase">HSV / HSB</label><div id="cp2-hsv" class="font-mono text-sm">0°, 0%, 100%</div></div>
+                    <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase" data-luminance>Relative luminance</label><div id="cp2-luminance" class="font-mono text-sm">1.000</div></div>
+                    <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase" data-contrast>Best text contrast</label><div id="cp2-contrast" class="font-mono text-sm">Black</div></div>
+                    <div class="p-3 bg-slate-900 rounded-xl"><label class="text-[10px] text-slate-400 uppercase" data-complement>Complementary color</label><div class="flex gap-2 items-center"><span id="cp2-complement-swatch" class="w-7 h-7 rounded border border-white/20"></span><span id="cp2-complement" class="font-mono text-sm">#000000</span></div></div>
+                </div></div>
                 </div>
             </div>
 
@@ -1097,6 +1190,7 @@
                     <div id="qr-generated" class="min-h-56 rounded-xl bg-white flex items-center justify-center p-4"><span class="text-slate-500 text-sm">Your QR code will appear here.</span></div>
                 </div>
             </div>
+            <article class="glass p-5 rounded-2xl space-y-3"><div class="flex items-center justify-between"><h3 class="font-bold text-cyan-300" data-qr-history-title>QR Code History</h3><button onclick="app.clearQRHistory()" class="px-3 py-1.5 rounded-lg bg-red-900/60 text-xs font-bold" data-qr-history-clear>Clear history</button></div><div id="qr-history-list" class="space-y-2 text-sm"><p class="text-slate-500" data-qr-history-empty>No QR activity yet.</p></div></article>
         </section>
 
     </main>
@@ -1264,15 +1358,43 @@
                 const intro = de ? 'Die sieben SI-Grundeinheiten bilden die Basis des Internationalen Einheitensystems.' : 'The seven SI base units form the foundation of the International System of Units.';
                 let html = `<h3 class="help-section-title">${heading}</h3><p class="text-sm text-slate-400 mb-4">${intro}</p><div class="help-grid mb-8">${units.map(u=>`<article class="help-card"><h4>${u[0]}</h4><p><b>${u[1]}</b><br>Symbol: ${u[2]}</p></article>`).join('')}</div>`;
                 groups.forEach(g=>{ html += `<h3 class="help-section-title mt-8">${g[0]}</h3><div class="help-grid">${g[1].map(f=>`<article class="help-card"><h4>${f[0]}</h4><p class="font-mono text-sm text-blue-200 my-2">${f[1]}</p><p>${de?'Erklärung: ':'Explanation: '}${f[2]}</p><p class="mt-2 text-emerald-300">${de?'Beispiel: ':'Example: '}${f[3]}</p></article>`).join('')}</div>`; });
+                const extraFormulas = de ? [
+                    ['Kreisringfläche','A = π(R² − r²)','Fläche zwischen zwei konzentrischen Kreisen.','R = 5 cm, r = 3 cm → A ≈ 50,27 cm²'],
+                    ['Kegelvolumen','V = ⅓πr²h','Ein Drittel des Volumens eines Zylinders mit gleicher Grundfläche und Höhe.','r = 3 cm, h = 8 cm → V ≈ 75,40 cm³'],
+                    ['Pyramidenvolumen','V = ⅓Gh','G ist die Grundfläche, h die senkrechte Höhe.','G = 30 cm², h = 9 cm → V = 90 cm³'],
+                    ['Gravitationskraft','F = G·m₁m₂/r²','Newtonsche Anziehungskraft zwischen zwei Massen.','Massen und Abstand einsetzen; G = 6,67430·10⁻¹¹ N·m²/kg²'],
+                    ['Zentripetalbeschleunigung','a = v²/r','Beschleunigung bei einer Kreisbewegung zum Mittelpunkt.','v = 4 m/s, r = 2 m → a = 8 m/s²'],
+                    ['Wärme bei Temperaturänderung','Q = m·c·ΔT','Energie zum Erwärmen oder Abkühlen eines Stoffes.','m = 2 kg, c = 4180 J/(kg·K), ΔT = 5 K → Q = 41 800 J'],
+                    ['Elektrische Feldstärke','E = F/q','Kraft pro elektrischer Ladung.','F = 2 N, q = 0,5 C → E = 4 N/C'],
+                    ['Wellenlänge','λ = v/f','Ausbreitungsgeschwindigkeit geteilt durch Frequenz.','v = 340 m/s, f = 170 Hz → λ = 2 m'],
+                    ['Kreisbewegung: Umlaufzeit','T = 2πr/v','Zeit für einen vollständigen Umlauf bei konstanter Bahngeschwindigkeit.','r = 1 m, v = 2π m/s → T = 1 s'],
+                    ['Elektrische Arbeit','W = U·I·t','Elektrische Energie bei konstanter Spannung und Stromstärke.','U = 12 V, I = 2 A, t = 5 s → W = 120 J'],
+                    ['Parallelschaltung von Kondensatoren','C₍ges₎ = C₁ + C₂ + …','Gesamtkapazität parallel geschalteter Kondensatoren.','2 µF + 3 µF = 5 µF'],
+                    ['Wärmeausdehnung (Volumen)','ΔV = β·V₀·ΔT','Volumenänderung bei einer Temperaturänderung.','β = 0,00021/K, V₀ = 1 L, ΔT = 10 K → ΔV = 2,1 mL']
+                ] : [
+                    ['Annulus area','A = π(R² − r²)','Area between two concentric circles.','R = 5 cm, r = 3 cm → A ≈ 50.27 cm²'],
+                    ['Cone volume','V = ⅓πr²h','One third of a cylinder with the same base and height.','r = 3 cm, h = 8 cm → V ≈ 75.40 cm³'],
+                    ['Pyramid volume','V = ⅓Gh','G is the base area and h is the perpendicular height.','G = 30 cm², h = 9 cm → V = 90 cm³'],
+                    ['Gravitational force','F = G·m₁m₂/r²','Newtonian attraction between two masses.','Use masses and distance; G = 6.67430·10⁻¹¹ N·m²/kg²'],
+                    ['Centripetal acceleration','a = v²/r','Acceleration directed toward the centre during circular motion.','v = 4 m/s, r = 2 m → a = 8 m/s²'],
+                    ['Heat from temperature change','Q = m·c·ΔT','Energy required to heat or cool a substance.','m = 2 kg, c = 4180 J/(kg·K), ΔT = 5 K → Q = 41,800 J'],
+                    ['Electric field strength','E = F/q','Force per unit electric charge.','F = 2 N, q = 0.5 C → E = 4 N/C'],
+                    ['Wavelength','λ = v/f','Wave speed divided by frequency.','v = 340 m/s, f = 170 Hz → λ = 2 m'],
+                    ['Circular motion: period','T = 2πr/v','Time for one complete revolution at constant tangential speed.','r = 1 m, v = 2π m/s → T = 1 s'],
+                    ['Electrical work','W = U·I·t','Electrical energy transferred at constant voltage and current.','U = 12 V, I = 2 A, t = 5 s → W = 120 J'],
+                    ['Capacitors in parallel','C₍total₎ = C₁ + C₂ + …','Total capacitance of capacitors connected in parallel.','2 µF + 3 µF = 5 µF'],
+                    ['Thermal expansion (volume)','ΔV = β·V₀·ΔT','Change in volume caused by a temperature change.','β = 0.00021/K, V₀ = 1 L, ΔT = 10 K → ΔV = 2.1 mL']
+                ];
+                html += `<h3 class="help-section-title mt-8">${de?'Weitere Mathematik- und Physikformeln':'More mathematics and physics formulas'}</h3><div class="help-grid">${extraFormulas.map(f=>`<article class="help-card"><h4>${f[0]}</h4><p class="font-mono text-sm text-blue-200 my-2">${f[1]}</p><p>${de?'Erklärung: ':'Explanation: '}${f[2]}</p><p class="mt-2 text-emerald-300">${de?'Beispiel: ':'Example: '}${f[3]}</p></article>`).join('')}</div>`;
                 content.innerHTML = html;
                 document.getElementById('formula-title').textContent = de ? 'Formelsammlung' : 'Formula collection';
                 document.querySelector('[data-formula-kicker]').textContent = de ? 'NACHSCHLAGEWERK' : 'REFERENCE';
                 document.querySelector('[data-formula-subtitle]').textContent = de ? 'Mathematik, Physik und SI-Grundeinheiten' : 'Mathematics, physics and SI base units';
                 document.querySelector('[data-formula-footer]').textContent = de ? 'Grundlagen und häufige Anwendungen' : 'Fundamentals and common applications';
-                document.querySelector('[data-formula-label]').textContent = de ? 'Formelsammlung' : 'Formula collection';
-                document.getElementById('formula-modal').classList.remove('hidden'); document.body.style.overflow='hidden';
+                const formulaLabel=document.querySelector('[data-formula-label]'); if(formulaLabel) formulaLabel.textContent = de ? 'Formelsammlung' : 'Formula collection';
+                const formulaModal=document.getElementById('formula-modal'); if(!formulaModal) throw new Error('Formula collection window is missing.'); formulaModal.classList.remove('hidden'); formulaModal.style.display='flex'; formulaModal.setAttribute('aria-hidden','false'); document.body.style.overflow='hidden';
             },
-            closeFormulaLibrary() { document.getElementById('formula-modal').classList.add('hidden'); document.body.style.overflow=''; },
+            closeFormulaLibrary() { const modal=document.getElementById('formula-modal'); if(modal){modal.classList.add('hidden');modal.style.display='none';modal.setAttribute('aria-hidden','true');} document.body.style.overflow=''; },
             showNotice(message, title='Workbench') { return this.showDialog({title,message}); },
             showConfirm(message, title='Please confirm') { return this.showDialog({title,message,confirm:true}); },
             showInput(title, message, value='') { return this.showDialog({title,message,input:true,value}); },
@@ -1296,6 +1418,70 @@
             currentStroke: null,
 
 
+            chemistryElements: (() => {
+                const raw = `H|Hydrogen|1.008;He|Helium|4.0026;Li|Lithium|6.94;Be|Beryllium|9.0122;B|Boron|10.81;C|Carbon|12.011;N|Nitrogen|14.007;O|Oxygen|15.999;F|Fluorine|18.998;Ne|Neon|20.180;Na|Sodium|22.990;Mg|Magnesium|24.305;Al|Aluminium|26.982;Si|Silicon|28.085;P|Phosphorus|30.974;S|Sulfur|32.06;Cl|Chlorine|35.45;Ar|Argon|39.948;K|Potassium|39.098;Ca|Calcium|40.078;Sc|Scandium|44.956;Ti|Titanium|47.867;V|Vanadium|50.942;Cr|Chromium|51.996;Mn|Manganese|54.938;Fe|Iron|55.845;Co|Cobalt|58.933;Ni|Nickel|58.693;Cu|Copper|63.546;Zn|Zinc|65.38;Ga|Gallium|69.723;Ge|Germanium|72.630;As|Arsenic|74.922;Se|Selenium|78.971;Br|Bromine|79.904;Kr|Krypton|83.798;Rb|Rubidium|85.468;Sr|Strontium|87.62;Y|Yttrium|88.906;Zr|Zirconium|91.224;Nb|Niobium|92.906;Mo|Molybdenum|95.95;Tc|Technetium|98;Ru|Ruthenium|101.07;Rh|Rhodium|102.91;Pd|Palladium|106.42;Ag|Silver|107.87;Cd|Cadmium|112.41;In|Indium|114.82;Sn|Tin|118.71;Sb|Antimony|121.76;Te|Tellurium|127.60;I|Iodine|126.90;Xe|Xenon|131.29;Cs|Caesium|132.91;Ba|Barium|137.33;La|Lanthanum|138.91;Ce|Cerium|140.12;Pr|Praseodymium|140.91;Nd|Neodymium|144.24;Pm|Promethium|145;Sm|Samarium|150.36;Eu|Europium|151.96;Gd|Gadolinium|157.25;Tb|Terbium|158.93;Dy|Dysprosium|162.50;Ho|Holmium|164.93;Er|Erbium|167.26;Tm|Thulium|168.93;Yb|Ytterbium|173.05;Lu|Lutetium|174.97;Hf|Hafnium|178.49;Ta|Tantalum|180.95;W|Tungsten|183.84;Re|Rhenium|186.21;Os|Osmium|190.23;Ir|Iridium|192.22;Pt|Platinum|195.08;Au|Gold|196.97;Hg|Mercury|200.59;Tl|Thallium|204.38;Pb|Lead|207.2;Bi|Bismuth|208.98;Po|Polonium|209;At|Astatine|210;Rn|Radon|222;Fr|Francium|223;Ra|Radium|226;Ac|Actinium|227;Th|Thorium|232.04;Pa|Protactinium|231.04;U|Uranium|238.03;Np|Neptunium|237;Pu|Plutonium|244;Am|Americium|243;Cm|Curium|247;Bk|Berkelium|247;Cf|Californium|251;Es|Einsteinium|252;Fm|Fermium|257;Md|Mendelevium|258;No|Nobelium|259;Lr|Lawrencium|266;Rf|Rutherfordium|267;Db|Dubnium|268;Sg|Seaborgium|269;Bh|Bohrium|270;Hs|Hassium|277;Mt|Meitnerium|278;Ds|Darmstadtium|281;Rg|Roentgenium|282;Cn|Copernicium|285;Nh|Nihonium|286;Fl|Flerovium|289;Mc|Moscovium|290;Lv|Livermorium|293;Ts|Tennessine|294;Og|Oganesson|294`;
+                const namesDe = {Hydrogen:'Wasserstoff',Helium:'Helium',Lithium:'Lithium',Beryllium:'Beryllium',Boron:'Bor',Carbon:'Kohlenstoff',Nitrogen:'Stickstoff',Oxygen:'Sauerstoff',Fluorine:'Fluor',Neon:'Neon',Sodium:'Natrium',Magnesium:'Magnesium',Aluminium:'Aluminium',Silicon:'Silicium',Phosphorus:'Phosphor',Sulfur:'Schwefel',Chlorine:'Chlor',Argon:'Argon',Potassium:'Kalium',Calcium:'Calcium',Scandium:'Scandium',Titanium:'Titan',Vanadium:'Vanadium',Chromium:'Chrom',Manganese:'Mangan',Iron:'Eisen',Cobalt:'Kobalt',Nickel:'Nickel',Copper:'Kupfer',Zinc:'Zink',Gallium:'Gallium',Germanium:'Germanium',Arsenic:'Arsen',Selenium:'Selen',Bromine:'Brom',Krypton:'Krypton',Rubidium:'Rubidium',Strontium:'Strontium',Yttrium:'Yttrium',Zirconium:'Zirkonium',Niobium:'Niob',Molybdenum:'Molybdän',Technetium:'Technetium',Ruthenium:'Ruthenium',Rhodium:'Rhodium',Palladium:'Palladium',Silver:'Silber',Cadmium:'Cadmium',Indium:'Indium',Tin:'Zinn',Antimony:'Antimon',Tellurium:'Tellur',Iodine:'Iod',Xenon:'Xenon',Caesium:'Cäsium',Barium:'Barium',Lanthanum:'Lanthan',Cerium:'Cer',Praseodymium:'Praseodym',Neodymium:'Neodym',Promethium:'Promethium',Samarium:'Samarium',Europium:'Europium',Gadolinium:'Gadolinium',Terbium:'Terbium',Dysprosium:'Dysprosium',Holmium:'Holmium',Erbium:'Erbium',Thulium:'Thulium',Ytterbium:'Ytterbium',Lutetium:'Lutetium',Hafnium:'Hafnium',Tantalum:'Tantal',Tungsten:'Wolfram',Rhenium:'Rhenium',Osmium:'Osmium',Iridium:'Iridium',Platinum:'Platin',Gold:'Gold',Mercury:'Quecksilber',Thallium:'Thallium',Lead:'Blei',Bismuth:'Bismut',Polonium:'Polonium',Astatine:'Astat',Radon:'Radon',Francium:'Francium',Radium:'Radium',Actinium:'Actinium',Thorium:'Thorium',Protactinium:'Protactinium',Uranium:'Uran',Neptunium:'Neptunium',Plutonium:'Plutonium',Americium:'Americium',Curium:'Curium',Berkelium:'Berkelium',Californium:'Californium',Einsteinium:'Einsteinium',Fermium:'Fermium',Mendelevium:'Mendelevium',Nobelium:'Nobelium',Lawrencium:'Lawrencium',Rutherfordium:'Rutherfordium',Dubnium:'Dubnium',Seaborgium:'Seaborgium',Bohrium:'Bohrium',Hassium:'Hassium',Meitnerium:'Meitnerium',Darmstadtium:'Darmstadtium',Roentgenium:'Roentgenium',Copernicium:'Copernicium',Nihonium:'Nihonium',Flerovium:'Flerovium',Moscovium:'Moscovium',Livermorium:'Livermorium',Tennessine:'Tennessin',Oganesson:'Oganesson'};
+                const lanth = new Set([57,58,59,60,61,62,63,64,65,66,67,68,69,70,71]), act = new Set([89,90,91,92,93,94,95,96,97,98,99,100,101,102,103]);
+                const rows = raw.split(';').map((v,i)=>{const [symbol,name,mass]=v.split('|'),z=i+1;let family='transition',group=0,period=1,col=1,row=1;
+                    if(z===1){family='nonmetal';group=1;period=1;col=1;row=1;} else if(z===2){family='noble';group=18;period=1;col=18;row=1;}
+                    else if(z>=3&&z<=10){period=2;row=2;col=z<=4?z-2:z+8;group=z<=4?z-2:z+8;family=z===3?'alkali':z===4?'alkaline':z===5||z===14||z===32||z===33||z===51||z===52?'metalloid':'nonmetal';if(z===9)family='halogen';if(z===10)family='noble';}
+                    else if(z>=11&&z<=18){period=3;row=3;col=z<=12?z-10:z+2;group=col;family=z===11?'alkali':z===12?'alkaline':z===13||z===14?'post':z===15||z===16?'nonmetal':z===17?'halogen':'noble';}
+                    else if(z>=19&&z<=36){period=4;row=4;col=z-18;group=col;family=col===1?'alkali':col===2?'alkaline':col===17?'halogen':col===18?'noble':'transition';}
+                    else if(z>=37&&z<=54){period=5;row=5;col=z-36;group=col;family=col===1?'alkali':col===2?'alkaline':col===17?'halogen':col===18?'noble':'transition';}
+                    else if(z>=55&&z<=86){period=6;row=6;if(lanth.has(z)){family='lanth';col=3+(z-57);group=3;}else{col=z<=56?z-54:z-68;group=col;family=col===1?'alkali':col===2?'alkaline':col===17?'halogen':col===18?'noble':col>=3&&col<=12?'transition':'post';}}
+                    else if(z>=87){period=7;row=7;if(act.has(z)){family='act';col=3+(z-89);group=3;}else{col=z<=88?z-86:z-100;group=col;family=col===1?'alkali':col===2?'alkaline':col===17?'halogen':col===18?'noble':col>=3&&col<=12?'transition':'post';}}
+                    if(lanth.has(z)){row=8;col=z-54;} if(act.has(z)){row=9;col=z-86;}
+                    if(!lanth.has(z)&&!act.has(z)) {
+                        if(group===13) family=z===5?'metalloid':'post';
+                        if(group===14) family=[6].includes(z)?'nonmetal':[14,32,114].includes(z)?'metalloid':'post';
+                        if(group===15) family=[7,15].includes(z)?'nonmetal':[33,51].includes(z)?'metalloid':'post';
+                        if(group===16) family=[8,16,34].includes(z)?'nonmetal':[52,84].includes(z)?'metalloid':'post';
+                        if(group===17) family='halogen'; if(group===18) family='noble';
+                    }
+                    const gas=[1,2,7,8,9,10,17,18,36,54,86,118].includes(z), liquid=[35,80].includes(z), state=gas?'Gas':liquid?'Liquid':'Solid';
+                    return {z,symbol,name,mass:Number(mass),family,group,period,row,col,state,nameDe:namesDe[name]||name};});
+                return rows;
+            })(),
+            openPeriodicTable() { const modal=document.getElementById('periodic-modal'); if(!modal)return; modal.classList.remove('hidden'); modal.style.display='flex'; document.body.style.overflow='hidden'; this.renderPeriodicTable(); modal.setAttribute('aria-hidden','false'); },
+            closePeriodicTable() { const modal=document.getElementById('periodic-modal'); if(modal){modal.classList.add('hidden');modal.style.display='none';} document.body.style.overflow=''; },
+            renderPeriodicTable() {
+                const de=(localStorage.getItem('wb_language')||'en')==='de', q=(document.getElementById('periodic-search')?.value||'').trim().toLowerCase(), filter=document.getElementById('periodic-filter')?.value||'all';
+                const grid=document.getElementById('periodic-grid'); if(!grid)return;
+                const colors={alkali:'border-red-400 bg-red-500/15',alkaline:'border-orange-400 bg-orange-500/15',transition:'border-yellow-400 bg-yellow-500/15',post:'border-cyan-400 bg-cyan-500/15',metalloid:'border-green-400 bg-green-500/15',nonmetal:'border-emerald-400 bg-emerald-500/15',halogen:'border-teal-400 bg-teal-500/15',noble:'border-purple-400 bg-purple-500/15',lanth:'border-pink-400 bg-pink-500/15',act:'border-fuchsia-400 bg-fuchsia-500/15'};
+                const familyDe={alkali:'Alkalimetall',alkaline:'Erdalkalimetall',transition:'Übergangsmetall',post:'Metall',metalloid:'Halbmetall',nonmetal:'Nichtmetall',halogen:'Halogen',noble:'Edelgas',lanth:'Lanthanoid',act:'Actinoid'};
+                const visible=this.chemistryElements.filter(e=>(filter==='all'||e.family===filter)&&(!q||`${e.z} ${e.symbol} ${e.name} ${e.nameDe}`.toLowerCase().includes(q)));
+                grid.innerHTML=visible.map(e=>`<button type="button" onclick="app.showElement(${e.z})" title="${e.z} · ${e.name}" class="rounded-lg border ${colors[e.family]} p-1 min-h-[66px] text-center hover:brightness-125 focus:outline-none focus:ring-2 focus:ring-white" style="grid-column:${e.col};grid-row:${e.row}"><span class="block text-[9px] text-slate-400">${e.z}</span><b class="block text-lg leading-5">${e.symbol}</b><span class="block text-[8px] truncate">${de?e.nameDe:e.name}</span><span class="block text-[8px] text-slate-400">${e.mass}</span></button>`).join('') || `<p class="text-slate-400 p-4">${de?'Keine Elemente gefunden.':'No elements found.'}</p>`;
+                const detail=document.getElementById('periodic-detail');
+                if(!detail.dataset.selected || !this.chemistryElements.some(e=>e.z===Number(detail.dataset.selected))) detail.innerHTML=`<p class="text-sm text-slate-400">${de?'Wähle ein Element aus, um seine Eigenschaften anzuzeigen.':'Choose an element to inspect its properties.'}</p>`;
+                document.getElementById('periodic-title').textContent=de?'Periodensystem':'Periodic table';
+                document.getElementById('periodic-subtitle').textContent=de?'Wähle ein Element aus, um die wichtigsten Eigenschaften zu sehen.':'Select an element to see its key properties.';
+            },
+            showElement(z) {
+                const e=this.chemistryElements.find(x=>x.z===z); if(!e)return; const de=(localStorage.getItem('wb_language')||'en')==='de', detail=document.getElementById('periodic-detail'); detail.dataset.selected=String(z);
+                const families={alkali:de?'Alkalimetall':'Alkali metal',alkaline:de?'Erdalkalimetall':'Alkaline earth metal',transition:de?'Übergangsmetall':'Transition metal',post:de?'Nachübergangsmetall':'Post-transition metal',metalloid:de?'Halbmetall':'Metalloid',nonmetal:de?'Nichtmetall':'Nonmetal',halogen:de?'Halogen':'Halogen',noble:de?'Edelgas':'Noble gas',lanth:de?'Lanthanoid':'Lanthanide',act:de?'Actinoid':'Actinide'};
+                const state=de?({Gas:'Gas',Liquid:'Flüssig',Solid:'Fest'}[e.state]):e.state, name=de?e.nameDe:e.name;
+                const rows=[[de?'Ordnungszahl':'Atomic number',e.z],[de?'Atommasse':'Atomic mass',`${e.mass} u`],[de?'Symbol':'Symbol',e.symbol],[de?'Gruppe':'Group',e.group||'—'],[de?'Periode':'Period',e.period],[de?'Elementfamilie':'Element family',families[e.family]],[de?'Aggregatzustand (ca. 20 °C)':'State (around 20 °C)',state],[de?'Protonen':'Protons',e.z],[de?'Elektronen (neutrales Atom)':'Electrons (neutral atom)',e.z]];
+                detail.innerHTML=`<div class="flex flex-wrap items-center gap-4 mb-4"><div class="w-20 h-20 rounded-2xl border border-cyan-400 bg-cyan-500/10 flex flex-col items-center justify-center"><span class="text-xs text-slate-400">${e.z}</span><b class="text-3xl">${e.symbol}</b></div><div><h3 class="text-2xl font-bold">${name}</h3><p class="text-sm text-slate-400">${families[e.family]}</p></div></div><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">${rows.map(([k,v])=>`<div class="rounded-xl bg-slate-900 p-3"><div class="text-[10px] uppercase tracking-wide text-slate-400">${k}</div><div class="font-semibold mt-1">${v}</div></div>`).join('')}</div><p class="text-xs text-slate-500 mt-3">${de?'Hinweis: Bei Elementen ohne stabile Isotope ist die angegebene Atommasse eine repräsentative Massenzahl.':'Note: For elements without stable isotopes, the listed atomic mass is a representative mass number.'}</p>`;
+            },
+            initChemistry() {
+                const ids=['chem-formula','chem-mass','chem-moles','chem-mm','chem-solute','chem-solution-volume','chem-density-mass','chem-density-volume'];
+                ids.forEach(id=>{const el=document.getElementById(id);if(!el)return;el.style.display='block';el.style.visibility='visible';el.style.opacity='1';el.style.pointerEvents='auto';el.tabIndex=0;});
+                const grid=document.getElementById('periodic-grid');
+                if(grid && !grid.dataset.ready) { try { this.renderPeriodicTable(); grid.dataset.ready='1'; } catch(error) { console.error('Periodic table initialization failed:',error); grid.innerHTML='<p class="text-rose-300 p-4">The periodic table could not be loaded.</p>'; } }
+                const modal=document.getElementById('periodic-modal');
+                if(modal && modal.classList.contains('hidden')) modal.style.display='none';
+            },
+            resetChemistryFields(ids, resultId) { ids.forEach(id=>{const el=document.getElementById(id);if(el)el.value='';}); const out=document.getElementById(resultId); if(out)out.textContent='—'; },
+            parseChemicalFormula(formula) {
+                const tokens=formula.replace(/\s+/g,''); if(!tokens||!/^[A-Z(]/.test(tokens))throw new Error('Invalid chemical formula'); let i=0;
+                const parseGroup=()=>{const counts={};while(i<tokens.length&&tokens[i]!==')'){if(tokens[i]==='('){i++;const inner=parseGroup();if(tokens[i]!==')')throw new Error('Missing closing parenthesis');i++;let n='';while(/[0-9]/.test(tokens[i]||''))n+=tokens[i++];const mult=n?Number(n):1;Object.entries(inner).forEach(([k,v])=>counts[k]=(counts[k]||0)+v*mult);}else{const m=tokens.slice(i).match(/^([A-Z][a-z]?)(\d*)/);if(!m)throw new Error('Check the element symbols and formula format');const symbol=m[1];if(!this.chemistryElements.some(e=>e.symbol===symbol))throw new Error(`Unknown element: ${symbol}`);i+=m[0].length;counts[symbol]=(counts[symbol]||0)+(m[2]?Number(m[2]):1);}}return counts;};
+                const counts=parseGroup();if(i!==tokens.length)throw new Error('Unexpected character in formula');return counts;
+            },
+            calculateMolarMass() { const de=(localStorage.getItem('wb_language')||'en')==='de',out=document.getElementById('chem-molar-result');try{const formula=document.getElementById('chem-formula').value.trim(),counts=this.parseChemicalFormula(formula);const total=Object.entries(counts).reduce((sum,[sym,n])=>sum+this.chemistryElements.find(e=>e.symbol===sym).mass*n,0);out.textContent=`${formula}: ${total.toFixed(4)} g/mol · `+Object.entries(counts).map(([s,n])=>`${s}${n>1?n:''}`).join(' + ');}catch(err){out.textContent=(de?'Fehler: ':'Error: ')+err.message;} },
+            calculateMoles() { const de=(localStorage.getItem('wb_language')||'en')==='de',m=Number(document.getElementById('chem-mass').value),n=Number(document.getElementById('chem-moles').value),M=Number(document.getElementById('chem-mm').value),filled=[m,n,M].filter((v,i)=>document.getElementById(['chem-mass','chem-moles','chem-mm'][i]).value.trim()!=='').length,out=document.getElementById('chem-amount-result');if(filled!==2||[m,n,M].some((v,i)=>document.getElementById(['chem-mass','chem-moles','chem-mm'][i]).value.trim()!==''&&(!Number.isFinite(v)||v<=0))){out.textContent=de?'Bitte genau zwei positive Werte eingeben.':'Enter exactly two positive values.';return;}if(!document.getElementById('chem-mass').value)out.textContent=`m = ${(n*M).toPrecision(8)} g`;else if(!document.getElementById('chem-moles').value)out.textContent=`n = ${(m/M).toPrecision(8)} mol`;else out.textContent=`M = ${(m/n).toPrecision(8)} g/mol`; },
+            calculateConcentration() { const de=(localStorage.getItem('wb_language')||'en')==='de',m=Number(document.getElementById('chem-solute').value),v=Number(document.getElementById('chem-solution-volume').value),out=document.getElementById('chem-conc-result');if(!document.getElementById('chem-solute').value||!document.getElementById('chem-solution-volume').value||m<0||v<=0||!Number.isFinite(m/v)){out.textContent=de?'Bitte eine gültige Masse und ein Volumen größer 0 eingeben.':'Enter a valid mass and a volume greater than 0.';return;}out.textContent=`β = ${(m/v).toPrecision(8)} g/L`;  },
+            calculateDensity() { const de=(localStorage.getItem('wb_language')||'en')==='de',m=Number(document.getElementById('chem-density-mass').value),v=Number(document.getElementById('chem-density-volume').value),out=document.getElementById('chem-density-result');if(!document.getElementById('chem-density-mass').value||!document.getElementById('chem-density-volume').value||m<0||v<=0){out.textContent=de?'Bitte gültige Werte und ein Volumen größer 0 eingeben.':'Enter valid values and a volume greater than 0.';return;}out.textContent=`ρ = ${(m/v).toPrecision(8)} g/cm³`; },
+
             openHelp() {
                 const modal = document.getElementById('help-modal');
                 if (modal) { modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
@@ -1311,6 +1497,9 @@
                 const en = document.getElementById('lang-en'), de = document.getElementById('lang-de');
                 if (en && de) { en.classList.toggle('language-active', lang === 'en'); de.classList.toggle('language-active', lang === 'de'); }
                 const phrases = {
+                    'Cooking Measures (Volume)':'Kochmaße (Volumen)','Cooking Measures (Weight)':'Kochmaße (Gewicht)','Play sound when finished':'Ton bei Ablauf abspielen','Enable PC notifications':'PC-Benachrichtigungen aktivieren','Notifications optional':'Benachrichtigungen optional','Desktop mode':'Desktopmodus','Smartphone mode':'Smartphone-Modus','Physics':'Physik','Physics mini-calculators':'Physik-Schnellrechner','Use the dimensional physics calculator to combine quantities with units and choose a suitable output unit. Open the formula collection for equations and examples.':'Kombiniere im physikalischen Rechner Größen mit Einheiten und wähle eine passende Ergebniseinheit. In der Formelsammlung findest du passende Gleichungen und Beispiele.','Calculate motion, electrical current and power with Ohm’s law, density from mass and volume, and wavelength from wave speed and frequency.':'Berechne Bewegungen, Stromstärke und Leistung mit dem Ohmschen Gesetz, die Dichte aus Masse und Volumen sowie die Wellenlänge aus Ausbreitungsgeschwindigkeit und Frequenz.','Shoe Sizes':'Schuhgrößen','Convert approximate shoe sizes between EU, US men’s, US women’s and UK systems, or estimate a size from foot length in centimetres. Sizing standards vary by brand, so treat results as a guide.':'Rechne Schuhgrößen näherungsweise zwischen EU-, US-Herren-, US-Damen- und UK-System um oder schätze die Größe anhand der Fußlänge in Zentimetern. Da Größentabellen je nach Marke abweichen, sind die Ergebnisse nur Richtwerte.','Equation Solver':'Gleichungslöser','Solve a linear or quadratic equation in the form ax² + bx + c = 0.':'Löse lineare oder quadratische Gleichungen der Form ax² + bx + c = 0.','Coefficient a':'Koeffizient a','Coefficient b':'Koeffizient b','Coefficient c':'Koeffizient c','Solve equation':'Gleichung lösen','Enter coefficients and solve to see the roots.':'Gib die Koeffizienten ein und berechne die Lösungen.','If a is zero, the solver treats the equation as linear. A negative discriminant produces complex roots.':'Wenn a gleich null ist, behandelt der Rechner die Gleichung als lineare Gleichung. Bei negativer Diskriminante werden komplexe Lösungen ausgegeben.','Mass concentration (g/L) = solute mass (g) / solution volume (L)':'Massenkonzentration (g/L) = Masse des gelösten Stoffes (g) / Volumen der Lösung (L)','Molar concentration (mol/L) = amount (mol) / solution volume (L)':'Stoffmengenkonzentration (mol/L) = Stoffmenge (mol) / Volumen der Lösung (L)','Amount of substance (mol) = mass (g) / molar mass (g/mol)':'Stoffmenge (mol) = Masse (g) / molare Masse (g/mol)','Density (g/cm³) = mass (g) / volume (cm³)':'Dichte (g/cm³) = Masse (g) / Volumen (cm³)','0 words':'0 Wörter','Start typing here...':'Hier schreiben ...','Kinematics calculator':'Kinematik-Rechner','Calculate final velocity from initial velocity, acceleration and time.':'Berechnet die Endgeschwindigkeit aus Anfangsgeschwindigkeit, Beschleunigung und Zeit.',"Ohm's law calculator":'Ohmsches-Gesetz-Rechner','Enter voltage and resistance to calculate current and power.':'Gib Spannung und Widerstand ein, um Stromstärke und Leistung zu berechnen.','Density calculator':'Dichte-Rechner','Density equals mass divided by volume.':'Die Dichte entspricht der Masse geteilt durch das Volumen.','Wave calculator':'Wellen-Rechner','Calculate':'Berechnen','Check the values.':'Bitte überprüfe die Werte.','Resistance must be greater than zero.':'Der Widerstand muss größer als null sein.','Volume must be greater than zero.':'Das Volumen muss größer als null sein.','Frequency must be greater than zero.':'Die Frequenz muss größer als null sein.','Calculate wavelength from wave speed and frequency.':'Berechnet die Wellenlänge aus Ausbreitungsgeschwindigkeit und Frequenz.','Shoe Sizes (approx.)':'Schuhgrößen (ca.)','Search tools…':'Werkzeuge suchen …','Search tools...':'Werkzeuge suchen …','No matching tools found.':'Keine passenden Werkzeuge gefunden.','HTML Viewer':'HTML-Ansicht','QR Code Tool':'QR-Code-Werkzeug','PDF Toolbox':'PDF-Werkzeug','Tasks':'Aufgaben','Create QR codes from text or links, or scan an existing QR code using a camera or image.':'Erstelle QR-Codes aus Text oder Links oder scanne vorhandene QR-Codes mit der Kamera oder einem Bild.','Use random tools such as coin flip and other chance-based selectors. Coin statistics count completed flips.':'Nutze Zufallswerkzeuge wie Münzwurf und andere Zufallsauswahlen. Die Münzstatistik zählt alle abgeschlossenen Würfe.','Organize information in editable rows and columns, and import or export tabular data.':'Ordne Informationen in bearbeitbaren Zeilen und Spalten an und importiere oder exportiere Tabellendaten.','Use the stopwatch to measure elapsed time and the timer to count down a duration.':'Miss mit der Stoppuhr Zeitspannen und nutze den Timer für einen Countdown.','Write and format text, then import or export supported document formats.':'Schreibe und formatiere Texte und importiere oder exportiere unterstützte Dokumentformate.','Generate random passwords and review the local password-generation history.':'Erzeuge sichere Zufallspasswörter und sieh dir den lokal gespeicherten Verlauf an.','Help & Tool Guide':'Hilfe und Werkzeugübersicht','A practical explanation of every tool and every converter category.':'Eine verständliche Erklärung aller Werkzeuge und Umrechner-Kategorien.','All tools':'Alle Werkzeuge','Converter categories':'Umrechner-Kategorien','Home':'Startseite','A dashboard that brings together your tasks, calendar events, finance balance and quick-access tools.':'Eine Übersicht mit Aufgaben, Kalenderterminen, Kontostand und Schnellzugriffen.','Use the basic and scientific calculators for arithmetic and more advanced mathematical expressions.':'Nutze den einfachen und wissenschaftlichen Rechner für Grundrechenarten und anspruchsvollere mathematische Ausdrücke.','Create dated events, set a time and add descriptions so you can remember what is planned.':'Erstelle Termine mit Datum, Uhrzeit und Beschreibung, damit du den Überblick behältst.','Explore the periodic table and calculate molar mass, amount of substance, mass concentration and density.':'Erkunde das Periodensystem und berechne molare Masse, Stoffmenge, Massenkonzentration und Dichte.','Pick colors and work with HEX, RGB and HSL values, palettes, gradients and contrast checks. HEX is a base-16 color code, usually written as #RRGGBB.':'Wähle Farben und bearbeite HEX-, RGB- und HSL-Werte, Paletten, Farbverläufe und Kontraste. HEX ist ein Zahlensystem zur Darstellung von Farben, meist im Format #RRGGBB.','Track income, expenses and your balance. The currency selector changes the displayed symbol only; it does not convert stored amounts.':'Verwalte Einnahmen, Ausgaben und deinen Kontostand. Die Währungsauswahl ändert nur das angezeigte Symbol, nicht den gespeicherten Betrag.','Write or load HTML and preview how the page is rendered in a browser-like preview area.':'Schreibe oder lade HTML-Code und sieh dir die Darstellung direkt in einer Vorschau an.','Create QR codes from text or links, or scan an existing QR code using a camera or image.':'Erstelle QR-Codes aus Text oder Links oder scanne vorhandene QR-Codes mit der Kamera oder einem Bild.','Open PDF files and use the available viewing and annotation tools.':'Öffne PDF-Dateien und nutze die verfügbaren Anzeige- und Anmerkungsfunktionen.','Create a to-do list, mark tasks complete and set their importance.':'Erstelle Aufgabenlisten, markiere erledigte Aufgaben und lege ihre Priorität fest.',
+                    'Timezone Comparison':'Zeitzonenvergleich','Task Management':'Aufgabenverwaltung','Duration Calculator':'Dauerrechner','Duration Rechner':'Dauerrechner','Aufgabe Management':'Aufgabenverwaltung','Background Farbe':'Hintergrundfarbe','Second Farbe':'Zweite Farbe','Gradient Generator':'Farbverlauf-Generator','Second color details':'Angaben zur zweiten Farbe','First color':'Erste Farbe','Second color':'Zweite Farbe','Relative luminance':'Relative Leuchtdichte','Best text contrast':'Bester Textkontrast','Complementary color':'Komplementärfarbe','Complementary color':'Komplementärfarbe','Reset':'Zurücksetzen','Time Mgmt':'Zeitverwaltung','Password Gen':'Passwortgenerator','Open periodic table':'Periodensystem öffnen','First color':'Erste Farbe','Second color':'Zweite Farbe','Second color details':'Angaben zur zweiten Farbe','Relative luminance':'Relative Leuchtdichte','Best text contrast':'Bester Textkontrast','Complementary color':'Komplementärfarbe','Complementary color':'Komplementärfarbe','Reset':'Zurücksetzen','Molar mass calculator':'Molare-Masse-Rechner','Amount of substance calculator':'Stoffmengen-Rechner','Concentration calculator':'Konzentrationsrechner','Density calculator':'Dichte-Rechner','Quick chemistry reference':'Chemie-Formelübersicht','Calculate molar mass':'Molmasse berechnen','Calculate missing value':'Fehlenden Wert berechnen','Calculate concentration':'Konzentration berechnen','Calculate density':'Dichte berechnen','Enter a chemical formula':'Gib eine chemische Formel ein','Search name, symbol or atomic number':'Name, Symbol oder Ordnungszahl suchen','No events yet.':'Noch keine Termine vorhanden.','No tasks yet':'Noch keine Aufgaben vorhanden.','Your workspace overview':'Deine Arbeitsübersicht','Open Finance':'Finanzen öffnen','Palette Generator':'Palettengenerator','Color Picker':'Farbauswahl','Colors':'Farben','Calendar':'Kalender','Tasks':'Aufgaben','Time Management':'Zeitverwaltung','Duration Calculator':'Dauerrechner','Background Color':'Hintergrundfarbe','Second Color':'Zweite Farbe','Gradient Generator':'Farbverlauf-Generator','Second color details':'Angaben zur zweiten Farbe','First color':'Erste Farbe','Second color':'Zweite Farbe','Relative luminance':'Relative Leuchtdichte','Best text contrast':'Bester Textkontrast','Complementary color':'Komplementärfarbe','Complementary color':'Komplementärfarbe','Reset':'Zurücksetzen',
+
                     "Home": "Startseite",
 "Your tasks, events, balance and time tools in one place.": "Deine Aufgaben, Termine, dein Kontostand und Zeitwerkzeuge an einem Ort.",
 "Total Balance": "Gesamtsaldo",
@@ -1333,6 +1522,60 @@
 "Stop camera": "Kamera stoppen",
 "Coin Flip": "Münzwurf",
 "Random →": "Zufall →",
+"Choose whether to scan with your camera or upload an image.": "Wähle aus, ob du einen QR-Code mit deiner Kamera scannen oder ein Bild hochladen möchtest.",
+"Mass (g)": "Masse (g)",
+"Amount (mol)": "Stoffmenge (mol)",
+"Molar mass (g/mol)": "Molare Masse (g/mol)",
+"Solute mass (g)": "Masse des gelösten Stoffes (g)",
+"Solution volume (L)": "Volumen der Lösung (L)",
+"Volume (cm³)": "Volumen (cm³)",
+"e.g. 18": "z. B. 18",
+"e.g. 1": "z. B. 1",
+"e.g. 18.015": "z. B. 18,015",
+"Quick chemistry reference": "Chemische Formeln im Überblick",
+"Amount (mol) = mass (g) / molar mass (g/mol)": "Stoffmenge (mol) = Masse (g) / molare Masse (g/mol)",
+"Amount concentration (mol/L) = amount (mol) / volume (L)": "Stoffmengenkonzentration (mol/L) = Stoffmenge (mol) / Volumen (L)",
+"Density (g/cm³) = mass (g) / volume (cm³)": "Dichte (g/cm³) = Masse (g) / Volumen (cm³)",
+"Chemical formula": "Chemische Formel",
+"Enter a chemical formula, e.g. H2O, Ca(OH)2 or Al2(SO4)3.": "Gib eine chemische Formel ein, zum Beispiel H₂O, Ca(OH)₂ oder Al₂(SO₄)₃.",
+"Calculate mass, amount of substance or molar mass.": "Berechne die Masse, die Stoffmenge oder die molare Masse. Gib dazu zwei bekannte Werte ein.",
+"Mass concentration = solute mass / solution volume.": "Die Massenkonzentration ergibt sich aus der Masse des gelösten Stoffes geteilt durch das Volumen der Lösung.",
+"Density = mass / volume.": "Die Dichte ergibt sich aus der Masse geteilt durch das Volumen.",
+"Open periodic table": "Periodensystem öffnen",
+"Molar mass calculator": "Molare-Masse-Rechner",
+"Amount of substance calculator": "Stoffmengen-Rechner",
+"Concentration calculator": "Konzentrations-Rechner",
+"Density calculator": "Dichte-Rechner",
+"Calculate molar mass": "Molare Masse berechnen",
+"Calculate missing value": "Fehlenden Wert berechnen",
+"Calculate concentration": "Konzentration berechnen",
+"Calculate density": "Dichte berechnen",
+"Select an element to see its key properties.": "Wähle ein Element aus, um seine wichtigsten Eigenschaften anzuzeigen.",
+"Search name, symbol or atomic number": "Nach Name, Symbol oder Ordnungszahl suchen",
+"All element families": "Alle Elementgruppen",
+"Choose an element to inspect its properties.": "Wähle ein Element aus, um seine Eigenschaften anzuzeigen.",
+"No elements found.": "Keine passenden Elemente gefunden.",
+"Workbench v6.3 · Help & Tool Guide": "Workbench v6.3 · Hilfe und Werkzeugübersicht",
+"Mathematics, physics and SI base units": "Mathematik, Physik und SI-Basiseinheiten",
+"118 elements · Standard atomic weights are approximate where appropriate.": "118 Elemente · Die angegebenen Atommassen sind, soweit erforderlich, Näherungswerte.",
+"Explore the periodic table and calculate molar mass, amount of substance, mass concentration and density.": "Erkunde das Periodensystem und berechne molare Masse, Stoffmenge, Massenkonzentration und Dichte.",
+"Measures a component's ability to store electric charge per volt, in farads.": "Beschreibt, wie viel elektrische Ladung ein Bauteil pro Volt speichern kann. Die Einheit ist Farad.",
+"Measures a fluid's resistance to flowing under shear, in pascal-seconds.": "Beschreibt den Fließwiderstand einer Flüssigkeit bei Scherbeanspruchung. Die Einheit ist Pascal-Sekunde.",
+"Picker, palettes & contrast": "Farbauswahl, Farbpaletten und Kontrastprüfung",
+"Rich Text & Color": "Textformatierung und Schriftfarbe",
+"Left Column: Jump & Events": "Linke Spalte: Navigation und Termine",
+"Right Column: Calendar Grid": "Rechte Spalte: Kalenderübersicht",
+"Enter values to calculate.": "Gib Werte ein, um das Ergebnis zu berechnen.",
+"Calculate the exact difference between two times.": "Berechne den genauen zeitlichen Abstand zwischen zwei Uhrzeiten.",
+"Import .txt / .docx": ".txt- oder .docx-Datei importieren",
+"Annotate images (PNG, JPG, WebP). PDF pages: export them as images first.": "Bilder im Format PNG, JPG oder WebP kommentieren. PDF-Seiten müssen vorher als Bilder exportiert werden.",
+"Enter items separated by commas:": "Gib die Einträge durch Kommas getrennt ein:",
+"Generate a coordinated five-color palette from the selected color.": "Erstelle aus der ausgewählten Farbe eine harmonisch abgestimmte Palette mit fünf Farben.",
+"Check the contrast between the selected color and a background color.": "Prüfe den Kontrast zwischen der ausgewählten Farbe und einer Hintergrundfarbe.",
+"Select a color to check contrast.": "Wähle eine Farbe aus, um den Kontrast zu prüfen.",
+"Chemistry": "Chemie",
+"Periodic table & calculators": "Periodensystem & Rechner",
+"Explore elements and solve common chemistry calculations.": "Entdecke Elemente und löse wichtige chemische Berechnungen.",
 "Statistics": "Statistiken",
 "Clear coin statistics": "Münzstatistik löschen",
 "Total flips: 0": "Würfe insgesamt: 0",
@@ -1353,7 +1596,7 @@
 "Calculate": "Berechnen",
 "Scientific Calculator": "Wissenschaftlicher Rechner",
 "Physical calculator": "Physikalischer Rechner",
-"Combine up to four physical quantities with selectable operations.": "Kombiniere bis zu vier physikalische Größen mit auswählbaren Rechenzeichen.",
+"Combine up to five physical quantities with selectable operations.": "Kombiniere bis zu fünf physikalische Größen mit auswählbaren Rechenzeichen.",
 "Formula collection": "Formelsammlung",
 "Calculate": "Berechnen",
 "Reset": "Zurücksetzen",
@@ -1474,7 +1717,7 @@
                     'Choose one or more categories. Click anywhere on a category to select it; only selected categories will be deleted.':'Wähle eine oder mehrere Kategorien. Klicke auf eine Kategorie, um sie auszuwählen. Nur ausgewählte Kategorien werden gelöscht.',
                     'Select at least one tool.':'Wähle mindestens ein Werkzeug aus.','Backup imported. Workbench will now reload.':'Sicherung importiert. Workbench wird jetzt neu geladen.',
                     'Import failed:':'Import fehlgeschlagen:','Export all data':'Alle Daten exportieren','Import all data':'Alle Daten importieren',
-                    'No matching tools found.':'Keine passenden Werkzeuge gefunden.','Search tools...':'Werkzeuge suchen...',
+                    'No matching tools found.':'Keine passenden Werkzeuge gefunden.','HTML Viewer':'HTML-Ansicht','QR Code Tool':'QR-Code-Werkzeug','PDF Toolbox':'PDF-Werkzeug','Tasks':'Aufgaben','Create QR codes from text or links, or scan an existing QR code using a camera or image.':'Erstelle QR-Codes aus Text oder Links oder scanne vorhandene QR-Codes mit der Kamera oder einem Bild.','Use random tools such as coin flip and other chance-based selectors. Coin statistics count completed flips.':'Nutze Zufallswerkzeuge wie Münzwurf und andere Zufallsauswahlen. Die Münzstatistik zählt alle abgeschlossenen Würfe.','Organize information in editable rows and columns, and import or export tabular data.':'Ordne Informationen in bearbeitbaren Zeilen und Spalten an und importiere oder exportiere Tabellendaten.','Use the stopwatch to measure elapsed time and the timer to count down a duration.':'Miss mit der Stoppuhr Zeitspannen und nutze den Timer für einen Countdown.','Write and format text, then import or export supported document formats.':'Schreibe und formatiere Texte und importiere oder exportiere unterstützte Dokumentformate.','Generate random passwords and review the local password-generation history.':'Erzeuge sichere Zufallspasswörter und sieh dir den lokal gespeicherten Verlauf an.','Help & Tool Guide':'Hilfe und Werkzeugübersicht','A practical explanation of every tool and every converter category.':'Eine verständliche Erklärung aller Werkzeuge und Umrechner-Kategorien.','All tools':'Alle Werkzeuge','Converter categories':'Umrechner-Kategorien','Home':'Startseite','A dashboard that brings together your tasks, calendar events, finance balance and quick-access tools.':'Eine Übersicht mit Aufgaben, Kalenderterminen, Kontostand und Schnellzugriffen.','Use the basic and scientific calculators for arithmetic and more advanced mathematical expressions.':'Nutze den einfachen und wissenschaftlichen Rechner für Grundrechenarten und anspruchsvollere mathematische Ausdrücke.','Create dated events, set a time and add descriptions so you can remember what is planned.':'Erstelle Termine mit Datum, Uhrzeit und Beschreibung, damit du den Überblick behältst.','Explore the periodic table and calculate molar mass, amount of substance, mass concentration and density.':'Erkunde das Periodensystem und berechne molare Masse, Stoffmenge, Massenkonzentration und Dichte.','Pick colors and work with HEX, RGB and HSL values, palettes, gradients and contrast checks. HEX is a base-16 color code, usually written as #RRGGBB.':'Wähle Farben und bearbeite HEX-, RGB- und HSL-Werte, Paletten, Farbverläufe und Kontraste. HEX ist ein Zahlensystem zur Darstellung von Farben, meist im Format #RRGGBB.','Track income, expenses and your balance. The currency selector changes the displayed symbol only; it does not convert stored amounts.':'Verwalte Einnahmen, Ausgaben und deinen Kontostand. Die Währungsauswahl ändert nur das angezeigte Symbol, nicht den gespeicherten Betrag.','Write or load HTML and preview how the page is rendered in a browser-like preview area.':'Schreibe oder lade HTML-Code und sieh dir die Darstellung direkt in einer Vorschau an.','Create QR codes from text or links, or scan an existing QR code using a camera or image.':'Erstelle QR-Codes aus Text oder Links oder scanne vorhandene QR-Codes mit der Kamera oder einem Bild.','Open PDF files and use the available viewing and annotation tools.':'Öffne PDF-Dateien und nutze die verfügbaren Anzeige- und Anmerkungsfunktionen.','Create a to-do list, mark tasks complete and set their importance.':'Erstelle Aufgabenlisten, markiere erledigte Aufgaben und lege ihre Priorität fest.','Search tools...':'Werkzeuge suchen...',
                     'Please enter a valid number.':'Bitte gib eine gültige Zahl ein.','Cancel':'Abbrechen','Close':'Schließen',
                     'Save':'Speichern','Delete':'Löschen','Edit':'Bearbeiten','Add':'Hinzufügen','Clear':'Leeren','Reset':'Zurücksetzen',
                     'Start':'Starten','Stop':'Stopp','Pause':'Pause','Resume':'Fortsetzen','Result':'Ergebnis','Category':'Kategorie',
@@ -1516,7 +1759,7 @@
 "Measures the number of elementary entities, commonly in moles.": "Misst die Anzahl elementarer Teilchen, üblicherweise in Mol."
                 });
                 Object.assign(phrases, {
-                    'Universal Converter': 'Einheitenumrechner',
+                    'Search tools... (e.g. calendar, coin, timer, PDF)':'Werkzeuge suchen ... (z. B. Kalender, Münzwurf, Timer oder PDF)','Search tools...':'Werkzeuge suchen ...','Could not load finance data.':'Finanzdaten konnten nicht geladen werden.','Add income or expense transactions to track your balance.':'Füge Einnahmen oder Ausgaben hinzu, um deinen Kontostand zu verfolgen.','Enter HTML code here...':'Gib hier HTML-Code ein ...','Preview your HTML here.':'Hier wird die HTML-Vorschau angezeigt.','Generate a secure password.':'Erstelle ein sicheres Passwort.','Choose a PDF file to open.':'Wähle eine PDF-Datei zum Öffnen aus.','Choose whether to scan with your camera or upload an image.':'Wähle aus, ob du einen QR-Code mit deiner Kamera scannen oder ein Bild hochladen möchtest.','Enter a URL or text...':'Gib eine Internetadresse oder einen Text ein ...','Search tasks...':'Aufgaben durchsuchen ...','Compare time zones around the world.':'Vergleiche die Uhrzeiten verschiedener Zeitzonen.','No tasks yet':'Noch keine Aufgaben vorhanden','Search':'Suchen','Search tools':'Werkzeuge suchen','Search all tools':'Alle Werkzeuge durchsuchen','Search tasks...':'Aufgaben durchsuchen ...','Finance':'Finanzen','HTML Viewer':'HTML-Anzeige','Password Gen':'Passwortgenerator','PDF Toolbox':'PDF-Werkzeuge','QR Code Tool':'QR-Code-Werkzeug','Tasks':'Aufgaben','Timezone Comparison':'Zeitzonenvergleich','Time Zone Comparison':'Zeitzonenvergleich','Export .ics':'Kalender als .ics exportieren','Import .ics':'Kalender aus .ics importieren','QR Code History':'QR-Code-Verlauf','Clear history':'Verlauf löschen','No QR activity yet.':'Bisher keine QR-Code-Aktivitäten.','Scanned':'Gescannt','Generated':'Erstellt','Finance':'Finanzen','Total Balance':'Gesamtsaldo','Add Transaction':'Transaktion hinzufügen','Income':'Einnahmen','Expense':'Ausgabe','Expenses':'Ausgaben','Balance':'Kontostand','Transactions':'Transaktionen','Amount':'Betrag','Save Transaction':'Transaktion speichern','No transactions yet.':'Noch keine Transaktionen vorhanden.','HTML Viewer':'HTML-Anzeige','HTML Editor':'HTML-Editor','Preview':'Vorschau','Run HTML':'HTML ausführen','Clear HTML':'HTML leeren','Password Gen':'Passwortgenerator','Password Generator':'Passwortgenerator','Generate Password':'Passwort erstellen','Password Length':'Passwortlänge','Include uppercase':'Großbuchstaben einschließen','Include lowercase':'Kleinbuchstaben einschließen','Include numbers':'Zahlen einschließen','Include symbols':'Sonderzeichen einschließen','PDF Toolbox':'PDF-Werkzeuge','Open PDF':'PDF öffnen','Download PDF':'PDF herunterladen','QR Code Tool':'QR-Code-Werkzeug','QR Code Reader':'QR-Code-Leser','QR Code Generator':'QR-Code-Generator','Choose image file':'Bilddatei auswählen','Text or URL':'Text oder URL','Enter a URL or text...':'Gib eine Internetadresse oder einen Text ein ...','Generate QR code':'QR-Code erstellen','Download':'Herunterladen','Tasks':'Aufgaben','Task Management':'Aufgabenverwaltung','Add Task':'Aufgabe hinzufügen','New Task':'Neue Aufgabe','Task name':'Aufgabenname','Importance':'Wichtigkeit','Low':'Niedrig','Medium':'Mittel','High':'Hoch','No tasks yet':'Noch keine Aufgaben vorhanden','No tasks yet.':'Noch keine Aufgaben vorhanden.','Timezone Comparison':'Zeitzonenvergleich','Time Zone Comparison':'Zeitzonenvergleich','Search tools...':'Werkzeuge suchen ...','Search tools':'Werkzeuge suchen','Search':'Suchen','Search all tools':'Alle Werkzeuge durchsuchen','No results found':'Keine Ergebnisse gefunden','Basic Calculator':'Einfacher Rechner','Scientific Calculator':'Wissenschaftlicher Rechner','Calendar':'Kalender','Events List':'Terminliste','Jump to Date':'Zu Datum springen','Date':'Datum','Event':'Termin','Actions':'Aktionen','Universal Converter':'Einheitenumrechner',
                     'Input Value': 'Eingabewert',
                     'Length': 'Länge',
                     'Weight': 'Masse',
@@ -1693,6 +1936,7 @@
                     'Close formula collection': 'Formelsammlung schließen'
                 });
                 const words = {
+                    'Timezone':'Zeitzone','Comparison':'Vergleich','Duration':'Dauer','Management':'Verwaltung','Background':'Hintergrund','Second':'Zweite','Gradient':'Farbverlauf','Generator':'Generator','Color':'Farbe','Color':'Farbe','First':'Erste','Details':'Angaben','Molar':'molar','Mass':'Masse','Amount':'Menge','Substance':'Stoff','Concentration':'Konzentration','Density':'Dichte','Chemistry':'Chemie','Periodic':'Periodisch','Table':'Tabelle','Open':'Öffnen','Reference':'Übersicht','Quick':'Kurz','Formula':'Formel','Calculate':'Berechnen','Missing':'Fehlend','Value':'Wert','Please':'Bitte','Enter':'Gib ein','exactly':'genau','positive':'positive','values':'Werte','Choose':'Wähle','element':'Element','families':'Gruppen','Search':'Suchen','name':'Name','symbol':'Symbol','atomic':'Atomare','number':'Zahl','No':'Keine','found':'gefunden','Reset':'Zurücksetzen',
                     'Home':'Startseite','Calculator':'Rechner','Calendar':'Kalender','Colors':'Farben','Finance':'Finanzen','Tasks':'Aufgaben',
                     'Task':'Aufgabe','Event':'Termin','Events':'Termine','Description':'Beschreibung','Date':'Datum','Time':'Uhrzeit',
                     'Save':'Speichern','Cancel':'Abbrechen','Close':'Schließen','Delete':'Löschen','Edit':'Bearbeiten','Add':'Hinzufügen',
@@ -2077,6 +2321,9 @@
                 const translateString = original => {
                     if (lang === 'en') return original;
                     if (phrases[original.trim()]) return original.replace(original.trim(), phrases[original.trim()]);
+                    // Translate full sentences via the phrase dictionary. Only short labels
+                    // use the fallback vocabulary, so German UI text stays grammatical.
+                    if (original.trim().split(/\s+/).length > 3) return original;
                     let out = original;
                     const keys = Object.keys(words).sort((a,b)=>b.length-a.length);
                     for (const key of keys) out = out.replace(new RegExp('(^|[^A-Za-zÀ-ÿ])'+key.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?=$|[^A-Za-zÀ-ÿ])','g'), (m,prefix)=>prefix+words[key]);
@@ -2105,7 +2352,7 @@
                 // Re-apply the canonical English alphabetical order after every language
                 // change. Sorting by translated labels would otherwise move items in DE.
                 const categoryEnglishNames = {
-                    acceleration:'Acceleration', amount:'Amount of Substance', angle:'Angle', area:'Area',
+                    cooking_volume:'Cooking Measures (Volume)', cooking_weight:'Cooking Measures (Weight)', acceleration:'Acceleration', amount:'Amount of Substance', angle:'Angle', area:'Area',
                     capacitance:'Capacitance', charge:'Electric Charge', conductance:'Electrical Conductance',
                     currency:'Currency', current:'Current', data:'Data Units', data_rate:'Data Rate',
                     density:'Density', energy:'Energy', flow:'Flow', force:'Force', frequency:'Frequency',
@@ -2118,8 +2365,22 @@
                     viscosity:'Dynamic Viscosity', kinematic_viscosity:'Kinematic Viscosity',
                     voltage:'Voltage', volume:'Volume', weight:'Weight', angular_velocity:'Angular Velocity'
                 };
+                const isGerman = lang === 'de';
+                const chemText = {
+                    'chem-title': isGerman?'Chemie':'Chemistry','chem-intro':isGerman?'Entdecke Elemente und löse chemische Berechnungen.':'Explore elements and solve common chemistry calculations.',
+                    'chem-open-periodic':isGerman?'Periodensystem öffnen':'Open periodic table','chem-molar-title':isGerman?'Molmassen-Rechner':'Molar mass calculator','chem-molar-desc':isGerman?'Gib eine chemische Formel ein, z. B. H2O, Ca(OH)2 oder Al2(SO4)3.':'Enter a chemical formula, e.g. H2O, Ca(OH)2 or Al2(SO4)3.',
+                    'chem-formula-label':isGerman?'Chemische Formel':'Chemical formula','chem-calc-molar':isGerman?'Molmasse berechnen':'Calculate molar mass','chem-amount-title':isGerman?'Stoffmengen-Rechner':'Amount of substance calculator','chem-amount-desc':isGerman?'Berechne Masse, Stoffmenge oder molare Masse.':'Calculate mass, amount of substance or molar mass.',
+                    'chem-mass-label':isGerman?'Masse (g)':'Mass (g)','chem-moles-label':isGerman?'Stoffmenge (mol)':'Amount (mol)','chem-mm-label':isGerman?'Molare Masse (g/mol)':'Molar mass (g/mol)','chem-calc-amount':isGerman?'Fehlenden Wert berechnen':'Calculate missing value',
+                    'chem-conc-title':isGerman?'Konzentrations-Rechner':'Concentration calculator','chem-conc-desc':isGerman?'Massenkonzentration = Masse des gelösten Stoffes / Lösungsvolumen.':'Mass concentration = solute mass / solution volume.','chem-solute-label':isGerman?'Stoffmasse (g)':'Solute mass (g)','chem-volume-label':isGerman?'Lösungsvolumen (L)':'Solution volume (L)','chem-calc-conc':isGerman?'Konzentration berechnen':'Calculate concentration',
+                    'chem-density-title':isGerman?'Dichte-Rechner':'Density calculator','chem-density-desc':isGerman?'Dichte = Masse / Volumen.':'Density = mass / volume.','chem-density-mass-label':isGerman?'Masse (g)':'Mass (g)','chem-density-volume-label':isGerman?'Volumen (cm³)':'Volume (cm³)','chem-calc-density':isGerman?'Dichte berechnen':'Calculate density','chem-extra-title':isGerman?'Chemie-Kurzreferenz':'Quick chemistry reference',
+                    'chem-ref-moles':isGerman?'Stoffmenge (mol) = Masse (g) / molare Masse (g/mol)':'Amount of substance (mol) = mass (g) / molar mass (g/mol)','chem-ref-massconc':isGerman?'Massenkonzentration (g/L) = Masse des gelösten Stoffes (g) / Volumen der Lösung (L)':'Mass concentration (g/L) = solute mass (g) / solution volume (L)','chem-ref-conc':isGerman?'Stoffmengenkonzentration (mol/L) = Stoffmenge (mol) / Volumen der Lösung (L)':'Molar concentration (mol/L) = amount (mol) / solution volume (L)','chem-ref-density':isGerman?'Dichte (g/cm³) = Masse (g) / Volumen (cm³)':'Density (g/cm³) = mass (g) / volume (cm³)'};
+                Object.entries(chemText).forEach(([key,value])=>{const el=document.querySelector(`[data-${key}]`);if(el)el.textContent=value;});
+                const periodicSearch=document.getElementById('periodic-search'); if(periodicSearch)periodicSearch.placeholder=isGerman?'Name, Symbol oder Ordnungszahl suchen':'Search name, symbol or atomic number';
+                const periodicFilter=document.getElementById('periodic-filter'); if(periodicFilter){const labels=isGerman?['Alle Elementgruppen','Nichtmetalle','Edelgase','Alkalimetalle','Erdalkalimetalle','Übergangsmetalle','Halbmetalle','Halogene','Nachübergangsmetalle','Lanthanoide','Actinoide']:['All element families','Nonmetals','Noble gases','Alkali metals','Alkaline earth metals','Transition metals','Metalloids','Halogens','Post-transition metals','Lanthanides','Actinides'];[...periodicFilter.options].forEach((o,i)=>o.textContent=labels[i]||o.textContent);}
+                if(!document.getElementById('periodic-modal').classList.contains('hidden'))this.renderPeriodicTable();
                 const categorySelect = document.getElementById('conv-cat');
                 if (categorySelect) {
+                    [['cooking_volume','Cooking Measures (Volume)'],['cooking_weight','Cooking Measures (Weight)']].forEach(([v,label])=>{if(![...categorySelect.options].some(o=>o.value===v))categorySelect.add(new Option(label,v));});
                     const options = [...categorySelect.options];
                     const sortedOptions = [...options].sort((a,b)=>(categoryEnglishNames[a.value] || a.value).localeCompare(categoryEnglishNames[b.value] || b.value, 'en'));
                     if (options.some((opt, idx) => opt !== sortedOptions[idx])) {
@@ -2127,7 +2388,7 @@
                     }
                 }
                 const navEnglishNames = {
-                    calc:'Calculator', calendar:'Calendar', color:'Colors', finance:'Finance',
+                    calc:'Calculator', physics:'Physics', chemistry:'Chemistry', calendar:'Calendar', color:'Colors', finance:'Finance',
                     html:'HTML Viewer', qr:'QR Code Tool', pass:'Password Gen', pdf:'PDF Toolbox',
                     random:'Random', table:'Table', todo:'Tasks', time:'Time Mgmt', editor:'Text Editor'
                 };
@@ -2139,6 +2400,7 @@
                         sortedButtons.forEach(button => toolNav.appendChild(button));
                     }
                 }
+                this.updateWordCount?.();
             },
             init() {
                 this.setLanguage(localStorage.getItem("wb_language") || "en");
@@ -2146,14 +2408,19 @@
                 const widthControl = document.getElementById('pdf-line-width');
                 widthControl.addEventListener('input', () => document.getElementById('pdf-line-width-value').textContent = `${widthControl.value} px`);
                 this.updateColorPicker(document.getElementById('cp-input').value);
+                this.updateColorPicker(document.getElementById('cp-input-two')?.value || '#FFFFFF','two');
+                this.renderQRHistory();
+                if(!this.homeClockInterval) this.homeClockInterval=setInterval(()=>{ const tz=localStorage.getItem('wb_timezone')||'Europe/London'; const el=document.getElementById('home-clock'); if(el)el.textContent=new Date().toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:tz}); },1000);
                 if (!localStorage.getItem('wb_table_rows')) localStorage.setItem('wb_table_rows', String(this.tableRows));
                 this.renderCalendar();
                 this.initTableSystem();
                 const categorySelect = document.getElementById('conv-cat');
-                const categoryEnglishNames = {acceleration:'Acceleration', amount:'Amount of Substance', angle:'Angle', area:'Area', capacitance:'Capacitance', charge:'Electric Charge', conductance:'Electrical Conductance', currency:'Currency', current:'Current', data:'Data Units', data_rate:'Data Rate', density:'Density', energy:'Energy', flow:'Flow', force:'Force', frequency:'Frequency', fuel:'Fuel Consumption', illuminance:'Illuminance', inductance:'Inductance', length:'Length', luminous_intensity:'Luminous Intensity', magnetic_flux:'Magnetic Flux', magnetic_flux_density:'Magnetic Flux Density', molar_concentration:'Molar Concentration', power:'Power', pressure:'Pressure', resistance:'Resistance', speed:'Speed', specific_heat:'Specific Heat Capacity', temp:'Temperature', thermal_conductivity:'Thermal Conductivity', time:'Time', torque:'Torque', viscosity:'Dynamic Viscosity', kinematic_viscosity:'Kinematic Viscosity', voltage:'Voltage', volume:'Volume', weight:'Weight', angular_velocity:'Angular Velocity'};
+                const categoryEnglishNames = {cooking_volume:'Cooking Measures (Volume)', cooking_weight:'Cooking Measures (Weight)', acceleration:'Acceleration', amount:'Amount of Substance', angle:'Angle', area:'Area', capacitance:'Capacitance', charge:'Electric Charge', conductance:'Electrical Conductance', currency:'Currency', current:'Current', data:'Data Units', data_rate:'Data Rate', density:'Density', energy:'Energy', flow:'Flow', force:'Force', frequency:'Frequency', fuel:'Fuel Consumption', illuminance:'Illuminance', inductance:'Inductance', length:'Length', luminous_intensity:'Luminous Intensity', magnetic_flux:'Magnetic Flux', magnetic_flux_density:'Magnetic Flux Density', molar_concentration:'Molar Concentration', power:'Power', pressure:'Pressure', resistance:'Resistance', speed:'Speed', specific_heat:'Specific Heat Capacity', temp:'Temperature', thermal_conductivity:'Thermal Conductivity', time:'Time', torque:'Torque', viscosity:'Dynamic Viscosity', kinematic_viscosity:'Kinematic Viscosity', voltage:'Voltage', volume:'Volume', weight:'Weight', angular_velocity:'Angular Velocity'};
                 [...categorySelect.options].sort((a,b) => (categoryEnglishNames[a.value] || a.value).localeCompare(categoryEnglishNames[b.value] || b.value, 'en')).forEach(option => categorySelect.appendChild(option));
                 this.updateConvUnits();
                 this.initPhysicalCalc();
+                this.initChemistry();
+                this.updateWordCount();
                 this.renderTodos();
                 this.initTimezone();
                 const savedCurrency = localStorage.getItem('wb_fin_currency') || 'EUR';
@@ -2164,10 +2431,13 @@
                 this.renderPassHistory();
                 this.renderCoinStats();
                 this.setupPDFTools();
+                const savedDeviceMode=localStorage.getItem('wb_device_mode');
+                const isPhone=/iPhone|iPod|Android.*Mobile|Windows Phone|BlackBerry/i.test(navigator.userAgent);
+                this.toggleDeviceMode(savedDeviceMode ? savedDeviceMode==='phone' : isPhone);
 
-                const navEnglishNames = {home:'Home',calc:'Calculator',calendar:'Calendar',color:'Colors',finance:'Finance',html:'HTML Viewer',qr:'QR Code Tool',pass:'Password Gen',pdf:'PDF Toolbox',random:'Random',table:'Table',todo:'Tasks',time:'Time Mgmt',editor:'Text Editor'};
+                const navEnglishNames = {home:'Home',calc:'Calculator',physics:'Physics',chemistry:'Chemistry',calendar:'Calendar',color:'Colors',finance:'Finance',html:'HTML Viewer',qr:'QR Code Tool',pass:'Password Gen',pdf:'PDF Toolbox',random:'Random',table:'Table',todo:'Tasks',time:'Time Mgmt',editor:'Text Editor'};
                 const toolNav = document.querySelector('#workbench-sidebar nav');
-                if (toolNav) [...toolNav.querySelectorAll(':scope > .nav-btn')].sort((a,b) => (navEnglishNames[a.id.replace('btn-','')] || a.id).localeCompare(navEnglishNames[b.id.replace('btn-','')] || b.id, 'en')).forEach(button => toolNav.appendChild(button));
+                if (toolNav) { const current=[...toolNav.querySelectorAll(':scope > .nav-btn')]; const sorted=[...current].sort((a,b)=>(navEnglishNames[a.id.replace('btn-','')]||a.id).localeCompare(navEnglishNames[b.id.replace('btn-','')]||b.id,'en')); if(current.some((button,i)=>button!==sorted[i]))sorted.forEach(button=>toolNav.appendChild(button)); }
 
                 const sidebar = document.getElementById('workbench-sidebar');
                 const resizeHandle = document.getElementById('sidebar-resize-handle');
@@ -2422,25 +2692,29 @@
                 if(target) {
                     target.classList.remove('hidden-section');
                     if(id === 'home') this.renderHome();
+                    if(id === 'chemistry') this.initChemistry();
                     if(id === 'finance') this.initStockChart();
                     if(id === 'calendar') this.renderCalendar();
                     if(id === 'table') this.initTableSystem();
                     if(id === 'todo') this.renderTodos();
                     if(id === 'qr') this.loadQRCameras();
                     if(id !== 'qr') this.stopQRScanner();
+                    if(id !== 'pdf') this.stopPDFCamera();
                 }
                 document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active-tab'));
                 const btn = document.getElementById('btn-' + id);
                 if(btn) btn.classList.add('active-tab');
+                if(document.body.classList.contains('smartphone-mode')) { document.body.classList.remove('mobile-sidebar-open'); document.getElementById('mobile-menu-toggle')?.setAttribute('aria-expanded','false'); }
             },
 
-            handleGlobalSearch(query) {
-                const panel = document.getElementById('global-search-results');
-                const input = document.getElementById('global-search');
+            handleGlobalSearch(query, mobile=false) {
+                const panel = document.getElementById(mobile?'mobile-tool-search-results':'global-search-results');
+                const input = document.getElementById(mobile?'mobile-tool-search':'global-search');
                 const q = query.trim().toLocaleLowerCase();
                 const aliases = {
                     home: 'home overview dashboard tasks events balance stopwatch timer',
                     calc: 'calculator converter units math basic scientific formulas physics',
+                    chemistry: 'chemistry chemical elements periodic table molar mass moles concentration density formula',
                     calendar: 'calendar date weekday events appointment schedule',
                     color: 'color picker hex rgb hsl palette',
                     finance: 'finance money budget income expenses chart compound interest savings loan credit monthly payment',
@@ -2478,34 +2752,38 @@
             openSearchResult(id) {
                 this.showSection(id);
                 const input = document.getElementById('global-search');
-                input.value = '';
-                this.handleGlobalSearch('');
+                const mobileInput=document.getElementById('mobile-tool-search');
+                if(input)input.value=''; if(mobileInput)mobileInput.value='';
+                this.handleGlobalSearch(''); this.handleGlobalSearch('',true);
                 input.blur();
             },
 
-            handleSearchKeydown(event) {
+            handleSearchKeydown(event, mobile=false) {
                 if (event.key === 'Escape') { this.handleGlobalSearch(''); return; }
                 if (event.key === 'Enter') {
-                    const first = document.querySelector('#global-search-results [data-section]');
+                    const first = document.querySelector((mobile?'#mobile-tool-search-results':'#global-search-results')+' [data-section]');
                     if (first) this.openSearchResult(first.dataset.section);
                 }
             },
 
             UNITS: {
-                    length: { pm:1e-12, nm:1e-9, um:1e-6, mm:0.001, cm:0.01, dm:0.1, m:1, dam:10, hm:100, km:1000, inch:0.0254, ft:0.3048, yd:0.9144, mile:1609.344, nmi:1852, AU:149597870700, light_year:9.460730472e15, parsec:3.085677581e16 },
-                    weight: { ng:1e-12, ug:1e-9, mg:1e-6, g:0.001, kg:1, tonne:1000, carat:0.0002, grain:0.00006479891, oz:0.028349523125, lb:0.45359237, stone:6.35029318, short_ton:907.18474, long_ton:1016.0469 },
-                    volume: { nL:1e-9, uL:1e-6, mL:0.001, cL:0.01, dL:0.1, L:1, m3:1000, tsp:0.00492892, tbsp:0.0147868, fl_oz_us:0.0295735, cup_us:0.236588, pint_us:0.473176, quart_us:0.946353, gal_us:3.78541, gal_uk:4.54609, US_fl_dram:0.00369669, US_gill:0.118294, US_barrel:119.2405, imperial_fl_oz:0.0284131 },
+                    shoe_size: { EU:0, US_men:0, US_women:0, UK:0, foot_cm:0 },
+                    length: { fm:1e-15, pm:1e-12, nm:1e-9, um:1e-6, mm:0.001, cm:0.01, dm:0.1, m:1, dam:10, hm:100, km:1000, inch:0.0254, ft:0.3048, yd:0.9144, mile:1609.344, nmi:1852, AU:149597870700, light_year:9.460730472e15, parsec:3.085677581e16 },
+                    weight: { pg:1e-15, ng:1e-12, ug:1e-9, mg:1e-6, g:0.001, kg:1, tonne:1000, carat:0.0002, grain:0.00006479891, oz:0.028349523125, lb:0.45359237, stone:6.35029318, short_ton:907.18474, long_ton:1016.0469 },
+                    cooking_volume: { mL:0.001, L:1, tsp:0.00492892159375, tbsp:0.01478676478125, cup_US:0.2365882365, cup_metric:0.25, cup_UK:0.284130625, fl_oz_US:0.0295735295625, pint_US:0.473176473, quart_US:0.946352946, gallon_US:3.785411784 },
+                    cooking_weight: { mg:1e-6, g:0.001, kg:1, oz:0.028349523125, lb:0.45359237 },
+                    volume: { fL:1e-15, pL:1e-12, nL:1e-9, uL:1e-6, mL:0.001, cL:0.01, dL:0.1, L:1, m3:1000, tsp:0.00492892, tbsp:0.0147868, fl_oz_us:0.0295735, cup_us:0.236588, pint_us:0.473176, quart_us:0.946353, gal_us:3.78541, gal_uk:4.54609, US_fl_dram:0.00369669, US_gill:0.118294, US_barrel:119.2405, imperial_fl_oz:0.0284131 },
                     speed: { mm_s:0.001, cm_s:0.01, mps:1, kph:0.2777777778, mph:0.44704, ft_s:0.3048, kn:0.5144444444, mach:343 },
                     temp: { C:'C', F:'F', K:'K', R:'R', Re:'Re', Ra:'Ra' },
                     currency: { EUR:1, USD:1.08, GBP:0.86, JPY:150, CHF:1.03, CAD:1.36, AUD:1.50, CNY:7.23, INR:84.4, PLN:4.0, CZK:23.5, SEK:10.3, NOK:10.7, DKK:7.46, NZD:1.65, SGD:1.45, HKD:8.45, KRW:1450, MXN:18.5, BRL:5.8 },
                     data: { bit:0.125, B:1, KB:1000, KiB:1024, MB:1e6, MiB:1048576, GB:1e9, GiB:1073741824, TB:1e12, TiB:1099511627776, PB:1e15, PiB:1125899906842624, EB:1e18, EiB:1152921504606846976 },
                     area: { mm2:1e-6, cm2:1e-4, dm2:0.01, m2:1, are:100, hectare:10000, km2:1e6, sq_in:0.00064516, sq_ft:0.09290304, sq_yd:0.83612736, acre:4046.8564224, sq_mile:2589988.110336, barn:1e-28 },
-                    pressure: { mPa:0.001, Pa:1, kPa:1000, MPa:1e6, GPa:1e9, mbar:100, hPa:100, bar:1e5, atm:101325, psi:6894.757, mmHg:133.322, Torr:133.322, inHg:3386.389, kgf_cm2:98066.5 },
-                    energy: { eV:1.602176634e-19, mJ:0.001, J:1, kJ:1000, MJ:1e6, GJ:1e9, Wh:3600, kWh:3.6e6, MWh:3.6e9, cal:4.184, kcal:4184, BTU:1055.056, therm:105505600, erg:1e-7, ft_lbf:1.355817948 },
+                    pressure: { uPa:1e-6, mPa:0.001, Pa:1, kPa:1000, MPa:1e6, GPa:1e9, mbar:100, hPa:100, bar:1e5, atm:101325, psi:6894.757, mmHg:133.322, Torr:133.322, inHg:3386.389, kgf_cm2:98066.5 },
+                    energy: { feV:1.602176634e-34, peV:1.602176634e-31, eV:1.602176634e-19, mJ:0.001, J:1, kJ:1000, MJ:1e6, GJ:1e9, Wh:3600, kWh:3.6e6, MWh:3.6e9, cal:4.184, kcal:4184, BTU:1055.056, therm:105505600, erg:1e-7, ft_lbf:1.355817948 },
                     power: { mW:0.001, W:1, kW:1000, MW:1e6, GW:1e9, PS:735.49875, hp:745.699872, BTU_h:0.29307107, kcal_h:1.163, ft_lbf_s:1.355817948 },
-                    time: { ps:1e-12, ns:1e-9, us:1e-6, ms:0.001, s:1, min:60, h:3600, d:86400, week:604800, fortnight:1209600, month_30d:2592000, year_365d:31536000, decade:315360000, century:3153600000 },
+                    time: { fs:1e-15, ps:1e-12, ns:1e-9, us:1e-6, ms:0.001, s:1, min:60, h:3600, d:86400, week:604800, fortnight:1209600, month_30d:2592000, year_365d:31536000, decade:315360000, century:3153600000 },
                     frequency: { mHz:0.001, Hz:1, kHz:1000, MHz:1e6, GHz:1e9, THz:1e12, rpm:1/60, rps:1, cps:1 },
-                    force: { mN:0.001, N:1, kN:1000, MN:1e6, dyn:1e-5, kgf:9.80665, lbf:4.448221615, gf:0.00980665, kip:4448.221615, pdl:0.138254954 },
+                    force: { uN:1e-6, mN:0.001, N:1, kN:1000, MN:1e6, dyn:1e-5, kgf:9.80665, lbf:4.448221615, gf:0.00980665, kip:4448.221615, pdl:0.138254954 },
                     torque: { Nmm:0.001, Nm:1, kNm:1000, lb_ft:1.355817948, lb_in:0.112984829, kgf_m:9.80665, gf_cm:0.0000980665 },
                     angle: { arcsec:1/3600, arcmin:1/60, deg:1, gon:0.9, rad:57.295779513, mrad:0.0572957795, turn:360, quadrant:90 },
                     density: { kg_m3:1, g_L:1, g_cm3:1000, kg_L:1000, lb_ft3:16.018463, lb_in3:27679.9, oz_in3:1729.994 },
@@ -2533,18 +2811,25 @@
                     amount: { mmol:1e-3, mol:1, kmol:1000, lbmol:453.59237 }
                 },
 
-            initPhysicalCalc() {
+            updateWordCount(){const editor=document.getElementById('text-editor-area');const out=document.getElementById('text-word-count');if(!editor||!out)return;const text=(editor.innerText||editor.textContent||'').trim();const count=text?text.split(/\s+/u).length:0;const de=(localStorage.getItem('wb_language')||'en')==='de';out.textContent=de?`${count} Wörter`:`${count} words`;},
+            solveEquation(){const ids=['eq-a','eq-b','eq-c'];if(ids.some(id=>document.getElementById(id).value.trim()==='')){document.getElementById('equation-result').textContent=(localStorage.getItem('wb_language')||'en')==='de'?'Bitte gib alle drei Koeffizienten ein.':'Please enter all three coefficients.';return;}const [a,b,c]=ids.map(id=>Number(document.getElementById(id).value));const out=document.getElementById('equation-result');const de=(localStorage.getItem('wb_language')||'en')==='de';if(![a,b,c].every(Number.isFinite)){out.textContent=de?'Bitte gib gültige Zahlen ein.':'Please enter valid numbers.';return;}const fmt=n=>Number(n.toPrecision(10)).toString();if(Math.abs(a)<1e-14){if(Math.abs(b)<1e-14){out.textContent=Math.abs(c)<1e-14?(de?'Unendlich viele Lösungen.':'Infinitely many solutions.'):(de?'Keine Lösung.':'No solution.');return;}out.textContent=`x = ${fmt(-c/b)}`;return;}const d=b*b-4*a*c;if(d>=0){const r=Math.sqrt(d);const x1=(-b+r)/(2*a),x2=(-b-r)/(2*a);out.textContent=d===0?`x = ${fmt(x1)}`:`x₁ = ${fmt(x1)} · x₂ = ${fmt(x2)}`;}else{const real=-b/(2*a),imag=Math.sqrt(-d)/(2*Math.abs(a));out.textContent=`x₁ = ${fmt(real)} + ${fmt(imag)}i · x₂ = ${fmt(real)} − ${fmt(imag)}i`; }},
+            resetEquationSolver(){['eq-a','eq-b','eq-c'].forEach(id=>document.getElementById(id).value='');const out=document.getElementById('equation-result');out.textContent=(localStorage.getItem('wb_language')||'en')==='de'?'Gib die Koeffizienten ein und berechne die Lösungen.':'Enter coefficients and solve to see the roots.';},
+            physicsKinematics(){const n=id=>Number(document.getElementById(id).value);const v=n('kin-v0')+n('kin-a')*n('kin-t');document.getElementById('kin-result').textContent=Number.isFinite(v)?`v = ${Number(v.toPrecision(8))} m/s`:'Check the values.';},
+            physicsOhm(){const u=Number(document.getElementById('ohm-u').value),r=Number(document.getElementById('ohm-r').value);const out=document.getElementById('ohm-result');if(r<=0||!Number.isFinite(u/r)){out.textContent='Resistance must be greater than zero.';return;}const i=u/r;out.textContent=`I = ${Number(i.toPrecision(8))} A · P = ${Number((u*i).toPrecision(8))} W`;},
+            physicsDensity(){const m=Number(document.getElementById('density-m').value),v=Number(document.getElementById('density-v').value);const out=document.getElementById('density-result');out.textContent=v<=0?'Volume must be greater than zero.':`ρ = ${Number((m/v).toPrecision(8))} kg/m³`;},
+            physicsWave(){const v=Number(document.getElementById('wave-v').value),f=Number(document.getElementById('wave-f').value);const out=document.getElementById('wave-result');out.textContent=f<=0?'Frequency must be greater than zero.':`λ = ${Number((v/f).toPrecision(8))} m`;},
+                        initPhysicalCalc() {
                 const row = document.getElementById('physical-calculator-row');
                 if (!row || row.dataset.ready === '1') return;
                 row.dataset.ready = '1';
                 const categorySource = document.getElementById('conv-cat');
-                const categories = [{value:'none',label:(localStorage.getItem('wb_language')||'en')==='de'?'Keine':'None'},...([...categorySource.options].map(o => ({value:o.value, label:o.textContent})))];
+                const categories = [{value:'none',label:(localStorage.getItem('wb_language')||'en')==='de'?'Keine':'None'},...([...categorySource.options].filter(o=>o.value!=='shoe_size' && o.value!=='currency' && o.value!=='fuel').map(o => ({value:o.value, label:o.textContent})))];
                 const unitNames = {length:'m',weight:'kg',volume:'m³',speed:'m/s',temp:'K',currency:'currency',data:'byte',area:'m²',pressure:'Pa',energy:'J',power:'W',time:'s',frequency:'Hz',force:'N',torque:'N·m',angle:'rad',density:'kg/m³',fuel:'fuel ratio',flow:'m³/s',voltage:'V',current:'A',resistance:'Ω',illuminance:'lx',data_rate:'B/s',acceleration:'m/s²',charge:'C',capacitance:'F',inductance:'H',conductance:'S',magnetic_flux:'Wb',magnetic_flux_density:'T',angular_velocity:'rad/s',viscosity:'Pa·s',kinematic_viscosity:'m²/s',thermal_conductivity:'W/(m·K)',specific_heat:'J/(kg·K)',molar_concentration:'mol/m³',luminous_intensity:'cd',amount:'mol'};
                 this.physicalCategoryNames = Object.fromEntries(categories.map(c=>[c.value,c.label]));
                 const makeSelect = (cls, options) => { const el=document.createElement('select'); el.className=cls+' w-full p-2 rounded-lg bg-slate-900 border border-white/10 text-xs'; options.forEach(o=>el.add(new Option(o.label,o.value))); return el; };
                 const makeInput = () => { const el=document.createElement('input'); el.type='number'; el.step='any'; el.placeholder='0'; el.className='w-full p-2 rounded-lg bg-slate-950 border border-white/10 text-sm'; return el; };
                 const groups=[];
-                for(let i=0;i<4;i++){
+                for(let i=0;i<5;i++){
                     const group=document.createElement('div'); group.className='w-[205px] shrink-0 space-y-2 p-3 rounded-xl bg-slate-900/70 border border-white/10'; group.dataset.slot=String(i);
                     const title=document.createElement('div'); title.className='text-xs font-bold text-cyan-300'; title.textContent=(localStorage.getItem('wb_language')||'en')==='de'?`Größe ${i+1}`:`Quantity ${i+1}`;
                     const cat=makeSelect('physical-category',categories); cat.dataset.role='category'; cat.value='none';
@@ -2556,7 +2841,7 @@
                     group.append(title,catLabel,cat,valLabel,val,unitLabel,unit); row.appendChild(group); groups.push(group);
                     const refresh=()=>{ const c=cat.value, units=this.UNITS[c]||{}; unit.innerHTML=''; let keys=c==='none'?['—']:c==='temp'?['C','F','K','R','Ra','Re']:Object.keys(units).sort((a,b)=>Number(units[a])-Number(units[b])); keys.forEach(k=>unit.add(new Option(k==='—'?(localStorage.getItem('wb_language')||'en')==='de'?'Keine':'None':k,k==='—'?'none':k))); };
                     cat.addEventListener('change',refresh); refresh();
-                    if(i<3){ const opWrap=document.createElement('div'); opWrap.className='w-[66px] shrink-0 space-y-2 pb-1'; const label=document.createElement('label'); label.className='block text-[10px] text-slate-400'; label.textContent=(localStorage.getItem('wb_language')||'en')==='de'?'Rechenart':'Operator'; const op=makeSelect('physical-operator',[{value:'+',label:'+'},{value:'-',label:'−'},{value:'*',label:'×'},{value:'/',label:'÷'}]); op.dataset.role='operator'; opWrap.append(label,op); row.appendChild(opWrap); }
+                    if(i<4){ const opWrap=document.createElement('div'); opWrap.className='w-[66px] shrink-0 space-y-2 pb-1'; const label=document.createElement('label'); label.className='block text-[10px] text-slate-400'; label.textContent=(localStorage.getItem('wb_language')||'en')==='de'?'Rechenart':'Operator'; const op=makeSelect('physical-operator',[{value:'+',label:'+'},{value:'-',label:'−'},{value:'*',label:'×'},{value:'/',label:'÷'}]); op.dataset.role='operator'; opWrap.append(label,op); row.appendChild(opWrap); }
                 }
                 this.physicalGroups=groups;
                 this.physicalOperators=[...row.querySelectorAll('[data-role="operator"]')];
@@ -2571,7 +2856,7 @@
                 const de=(localStorage.getItem('wb_language')||'en')==='de';
                 const set=(sel,en,deText)=>{const el=document.querySelector(sel);const value=de?deText:en;if(el&&el.textContent!==value)el.textContent=value;};
                 set('[data-phys-title]','Physical calculator','Physikalischer Rechner');
-                set('[data-phys-subtitle]','Combine up to four physical quantities with selectable operations.','Kombiniere bis zu vier physikalische Größen mit auswählbaren Rechenzeichen.');
+                set('[data-phys-subtitle]','Combine up to five physical quantities with selectable operations.','Kombiniere bis zu fünf physikalische Größen mit auswählbaren Rechenzeichen.');
                 set('[data-phys-formulas]','∑ Formula collection','∑ Formelsammlung');
                 set('[data-phys-calculate]','Calculate','Berechnen'); set('[data-phys-reset]','Reset','Zurücksetzen');
                 set('[data-phys-note]','Addition and subtraction require matching physical dimensions. Multiplication and division combine dimensions; the result can be converted to a matching category and unit. Select None for ordinary arithmetic.','Bei Addition und Subtraktion müssen die physikalischen Dimensionen übereinstimmen. Multiplikation und Division verknüpfen Dimensionen; das Ergebnis kann in eine passende Kategorie und Einheit umgerechnet werden. Wähle „Keine“ für normale Rechnungen.');
@@ -2742,7 +3027,9 @@
 
                 const units = this.UNITS;
 
-                if(cat === 'temp') {
+                if(cat === 'shoe_size') {
+                    ['EU','US_men','US_women','UK','foot_cm'].forEach(u=>{from.add(new Option(u,u));to.add(new Option(u,u));});
+                } else if(cat === 'temp') {
                     ['F', 'Ra', 'C', 'K', 'Re'].forEach(u => { from.innerHTML += `<option value="${u}">${u}</option>`; to.innerHTML += `<option value="${u}">${u}</option>`; });
                 } else if (units[cat]) {
                     Object.keys(units[cat]).sort((a,b) => Number(units[cat][a]) - Number(units[cat][b])).forEach(u => { from.add(new Option(u,u)); to.add(new Option(u,u)); });
@@ -2759,7 +3046,11 @@
                 let res = 0;
                 const units = this.UNITS;
 
-                if(cat === 'temp') {
+                if(cat === 'shoe_size') {
+                    const footCm={EU:v=>(v-1.5)/1.5, US_men:v=>(v+22)*2.54/3, US_women:v=>(v+20.5)*2.54/3, UK:v=>(v+23)*2.54/3, foot_cm:v=>v};
+                    const fromFoot={EU:v=>v*1.5+1.5, US_men:v=>v/2.54*3-22, US_women:v=>v/2.54*3-20.5, UK:v=>v/2.54*3-23, foot_cm:v=>v};
+                    const cm=footCm[from](val); res=fromFoot[to](cm);
+                } else if(cat === 'temp') {
                     let c = from === 'C' ? val : from === 'F' ? (val - 32) * 5/9 : from === 'K' ? val - 273.15 : from === 'R' ? (val - 491.67) * 5/9 : from === 'Re' ? val * 1.25 : (val - 491.67) * 5/9;
                     res = to === 'C' ? c : to === 'F' ? c * 9/5 + 32 : to === 'K' ? c + 273.15 : to === 'R' ? (c + 273.15) * 9/5 : to === 'Re' ? c * 0.8 : (c + 273.15) * 9/5;
                 } else if (cat === 'fuel') {
@@ -2781,8 +3072,8 @@ appendBasic(v) { const d = document.getElementById('basic-display'); if (d.value
             clearCalc(t) { document.getElementById(t === 'basic' ? 'basic-display' : 'sci-display').value = ''; },
             safeEvalBasic(expression) {
                 const expr = String(expression).replace(/\s+/g, '');
-                if (!expr || !/^[0-9+\-*\/().]+$/.test(expr)) throw new Error('Invalid');
-                const normalized = expr.replace(/(^|[^0-9.])0+(?=[0-9])/g, '$1');
+                if (!expr || !/^[0-9+\-*\/%().]+$/.test(expr)) throw new Error('Invalid');
+                const normalized = expr.replace(/(^|[^0-9.])0+(?=[0-9])/g, '$1').replace(/(\d+(?:\.\d+)?)%/g, '($1/100)');
                 const result = Function('"use strict"; return (' + normalized + ')')();
                 if (typeof result !== 'number' || !Number.isFinite(result)) throw new Error('Invalid');
                 return String(Number(result.toPrecision(12)));
@@ -2868,7 +3159,21 @@ appendBasic(v) { const d = document.getElementById('basic-display'); if (d.value
                 });
             },
 
-changeMonth(dir) {
+exportCalendarICS() {
+                const esc = value => String(value||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');
+                const lines=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//QuantumVexor1//Workbench 6.2//EN','CALSCALE:GREGORIAN'];
+                Object.entries(this.events||{}).forEach(([key,event])=>{const [y,m,d]=key.split('-').map(Number);if(!y||!m||!d)return;lines.push('BEGIN:VEVENT',`UID:${key}-${encodeURIComponent(event.text||'event')}@workbench`,`DTSTART;VALUE=DATE:${String(y).padStart(4,'0')}${String(m).padStart(2,'0')}${String(d).padStart(2,'0')}`,`SUMMARY:${esc(event.text)}`);if(event.time)lines.push(`X-WORKBENCH-TIME:${esc(event.time)}`);if(event.description)lines.push(`DESCRIPTION:${esc(event.description)}`);lines.push('END:VEVENT');});
+                lines.push('END:VCALENDAR'); const blob=new Blob([lines.join('\r\n')+'\r\n'],{type:'text/calendar;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='workbench-calendar.ics';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+            },
+            async importCalendarICS(event) {
+                const file=event.target.files?.[0];if(!file)return;try{const raw=(await file.text()).replace(/\r?\n[ \t]/g,'');const blocks=raw.match(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g)||[];let added=0;
+                    const unescapeICS=v=>v.replace(/\\n/gi,'\n').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\');
+                    blocks.forEach(block=>{const get=name=>{const m=block.match(new RegExp('^'+name+'(?:;[^:]*)?:(.*)$','mi'));return m?unescapeICS(m[1].trim()):'';};const dateMatch=block.match(/^DTSTART(?:;[^:]*)?:(\d{4})(\d{2})(\d{2})/mi);if(!dateMatch)return;const key=`${Number(dateMatch[1])}-${Number(dateMatch[2])}-${Number(dateMatch[3])}`;const title=get('SUMMARY')||'Imported event';const imported={text:title,time:get('X-WORKBENCH-TIME'),description:get('DESCRIPTION')};if(this.events[key]){const prior=this.events[key];prior.text=`${prior.text} / ${imported.text}`;prior.description=[prior.description,imported.description].filter(Boolean).join('\n');}else this.events[key]=imported;added++;});
+                    localStorage.setItem('wb_events',JSON.stringify(this.events));this.renderCalendar();this.showNotice(added?`${added} calendar event(s) imported.`:'No valid calendar events were found.');
+                }catch(error){this.showNotice(`Calendar import failed: ${error.message}`);}finally{event.target.value='';}
+            },
+
+            changeMonth(dir) {
                 const monthSel = document.getElementById('cal-month-sel');
                 const yearSel = document.getElementById('cal-year-sel');
                 let m = parseInt(monthSel.value, 10) + dir;
@@ -3104,7 +3409,10 @@ addRow() {
                 const homeBalance = document.getElementById('home-finance-balance');
                 if (homeBalance) homeBalance.textContent = this.formatFinanceAmount(total);
                 const homeDate = document.getElementById('home-date');
-                if (homeDate) homeDate.textContent = new Date().toLocaleDateString(undefined, { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+                const tz=localStorage.getItem('wb_timezone')||'Europe/London';
+                const tzSelect=document.getElementById('home-timezone'); if(tzSelect && tzSelect.value!==tz)tzSelect.value=tz;
+                const now=new Date(); if(homeDate)homeDate.textContent=now.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric',timeZone:tz});
+                const clock=document.getElementById('home-clock'); if(clock)clock.textContent=now.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit',second:'2-digit',timeZone:tz});
                 const swDisplay = document.getElementById('stopwatch-display');
                 const homeSwDisplay = document.getElementById('home-stopwatch-display');
                 if (swDisplay && homeSwDisplay) homeSwDisplay.textContent = swDisplay.textContent;
@@ -3116,6 +3424,8 @@ addRow() {
                 if (timerDisplay && homeTimerDisplay) homeTimerDisplay.textContent = timerDisplay.textContent;
                 if (window.lucide) lucide.createIcons();
             },
+
+            saveTimezone(zone) { try { new Intl.DateTimeFormat('en',{timeZone:zone}); localStorage.setItem('wb_timezone',zone); this.renderHome(); } catch(e) { this.showNotice('Please choose a valid time zone.'); } },
 
             // --- Finance ---
             addFinance() {
@@ -3382,7 +3692,26 @@ swElapsed: 0,
                 if (homeDisplay) homeDisplay.textContent = text;
             },
 
-            startTimer() {
+            async enableTimerNotifications() {
+                const status=document.getElementById('timer-notification-status');
+                if(!('Notification' in window)){if(status)status.textContent='Notifications are not supported here.';return;}
+                try { const permission=await Notification.requestPermission(); if(status)status.textContent=permission==='granted'?'PC notifications enabled.':permission==='denied'?'Notifications blocked in browser settings.':'Permission not granted.'; }
+                catch(e){if(status)status.textContent='Could not request notification permission.';}
+            },
+            timerFinished() {
+                const de=(localStorage.getItem('wb_language')||'en')==='de';
+                const title=de?'Workbench – Timer abgelaufen':'Workbench – Timer finished';
+                const message=de?'Dein Timer ist abgelaufen.':'Your timer has finished.';
+                this.showNotice(message);
+                if(document.getElementById('timer-sound-enabled')?.checked) {
+                    try { const Ctx=window.AudioContext||window.webkitAudioContext; const ctx=new Ctx(); const now=ctx.currentTime;
+                        [0,0.28,0.56].forEach((offset)=>{const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.value=880;gain.gain.setValueAtTime(0.0001,now+offset);gain.gain.exponentialRampToValueAtTime(0.22,now+offset+0.02);gain.gain.exponentialRampToValueAtTime(0.0001,now+offset+0.2);osc.connect(gain);gain.connect(ctx.destination);osc.start(now+offset);osc.stop(now+offset+0.22);});
+                    } catch(e) { /* Audio may be unavailable until the user interacts with the page. */ }
+                }
+                if('Notification' in window && Notification.permission==='granted') { try { new Notification(title,{body:message,tag:'workbench-timer'}); } catch(e){} }
+            },
+
+                        startTimer() {
                 const key = this.timerKey();
                 let duration;
                 if (this.timerPausedKey === key && this.timerRemaining > 0) {
@@ -3406,7 +3735,7 @@ swElapsed: 0,
                         this.timerRemaining = 0;
                         this.timerPausedKey = null;
                         this.showTimer('00:00.00');
-                        this.showNotice("Finished!");
+                        this.timerFinished();
                         return;
                     }
                     this.timerRemaining = remaining;
@@ -3698,10 +4027,44 @@ calculateHomeBasic() {
             },
 
             // --- PDF Toolbox ---
-setupPDFTools() {
+toggleDeviceMode(force) {
+                const enabled=!!force;
+                document.body.classList.toggle('smartphone-mode',enabled);
+                localStorage.setItem('wb_device_mode',enabled?'phone':'desktop');
+                document.body.classList.remove('mobile-sidebar-open');
+                const desktop=document.getElementById('mode-desktop'),phone=document.getElementById('mode-phone');
+                desktop?.classList.toggle('language-active',!enabled); phone?.classList.toggle('language-active',enabled);
+                desktop?.setAttribute('aria-pressed',String(!enabled)); phone?.setAttribute('aria-pressed',String(enabled));
+                const menu=document.getElementById('mobile-menu-toggle'); if(menu)menu.setAttribute('aria-expanded','false');
+            },
+            toggleMobileSidebar() {
+                if(!document.body.classList.contains('smartphone-mode')) return;
+                const open=document.body.classList.toggle('mobile-sidebar-open');
+                document.getElementById('mobile-menu-toggle')?.setAttribute('aria-expanded',String(open));
+            },
+                        async startPDFCamera() {
+                try {
+                    if (!navigator.mediaDevices?.getUserMedia) throw new Error('Camera access is unavailable in this context.');
+                    await this.stopPDFCamera();
+                    const selectedDevice=document.getElementById('pdf-camera-select')?.value;
+                    const videoConstraint=selectedDevice ? {deviceId:{exact:selectedDevice}} : {facingMode:{ideal:'environment'}};
+                    const stream = await navigator.mediaDevices.getUserMedia({video:videoConstraint,audio:false});
+                    this.pdfCameraStream = stream;
+                    const video=document.getElementById('pdf-camera-video'); video.srcObject=stream; video.classList.remove('hidden'); await video.play();
+                    const devices=await navigator.mediaDevices.enumerateDevices(); const select=document.getElementById('pdf-camera-select');
+                    select.innerHTML=''; devices.filter(d=>d.kind==='videoinput').forEach((d,i)=>{const o=document.createElement('option');o.value=d.deviceId;o.textContent=d.label||`Camera ${i+1}`;select.appendChild(o);});
+                } catch(e) { this.showNotice(`Could not start camera: ${e.message}`); }
+            },
+            async stopPDFCamera() { if(this.pdfCameraStream){this.pdfCameraStream.getTracks().forEach(t=>t.stop());this.pdfCameraStream=null;} const v=document.getElementById('pdf-camera-video');if(v){v.pause();v.srcObject=null;v.classList.add('hidden');} },
+            capturePDFCamera() {
+                const video=document.getElementById('pdf-camera-video'); if(!video?.videoWidth){this.showNotice('Open the camera before capturing.');return;}
+                this.pdfCanvas.width=video.videoWidth;this.pdfCanvas.height=video.videoHeight;this.bgImg=null;this.strokes=[];this.redoStack=[];this.pdfCtx.drawImage(video,0,0);this.showNotice('Image captured. You can now annotate and export it.');
+            },
+            setupPDFTools() {
                 const canvas = document.getElementById('pdf-canvas');
                 this.pdfCanvas = canvas;
                 this.pdfCtx = canvas.getContext('2d');
+                document.getElementById('pdf-camera-select')?.addEventListener('change', () => this.startPDFCamera());
                 canvas.tabIndex = 0;
                 canvas.style.touchAction = 'none';
                 document.getElementById('pdf-upload').addEventListener('change', (e) => {
@@ -3793,12 +4156,13 @@ setupPDFTools() {
 
             pdfDownload() {
                 if (!this.bgImg && !this.strokes.length) { this.showNotice('Nothing to save yet. Upload an image or draw first.'); return; }
-                this.pdfCanvas.toBlob(blob => {
-                    if (!blob) return;
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a'); a.href = url; a.download = 'workbench-annotated.png'; a.click();
-                    setTimeout(() => URL.revokeObjectURL(url), 1000);
-                }, 'image/png');
+                const format=document.getElementById('pdf-export-format')?.value||'image/png';
+                if(format==='application/pdf') {
+                    const win=window.open('','_blank'); if(!win){this.showNotice('Allow pop-ups to create the PDF.');return;}
+                    const data=this.pdfCanvas.toDataURL('image/png'); win.document.write(`<html><head><title>Workbench export</title><style>@page{margin:0}body{margin:0}img{width:100%;height:auto}</style></head><body><img src="${data}" onload="setTimeout(()=>window.print(),250)"></body></html>`);win.document.close();return;
+                }
+                const ext=format==='image/jpeg'?'jpg':format==='image/webp'?'webp':'png';
+                this.pdfCanvas.toBlob(blob => { if (!blob) return; const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=`workbench-annotated.${ext}`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000); },format,.92);
             },
 
             pdfUndo() {
@@ -3871,25 +4235,27 @@ previewHTML() {
             },
 
             // --- Color Picker Logic ---
-            updateColorPicker(hex) {
+            updateColorPicker(hex, suffix='') {
+                const prefix = suffix === 'two' ? 'cp2-' : 'cp-';
+                const put = (id, value) => { const el=document.getElementById(prefix+id); if(el) el.innerText=value; };
                 const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
-                document.getElementById('cp-hex').innerText = hex.toUpperCase();
-                document.getElementById('cp-rgb').innerText = `rgb(${r}, ${g}, ${b})`;
+                put('hex', hex.toUpperCase());
+                put('rgb', `rgb(${r}, ${g}, ${b})`);
                 const rf=r/255, gf=g/255, bf=b/255, max=Math.max(rf,gf,bf), min=Math.min(rf,gf,bf), delta=max-min;
                 let h=0, sat=0; const l=(max+min)/2;
                 if(delta!==0) { sat=delta/(1-Math.abs(2*l-1)); if(max===rf) h=60*(((gf-bf)/delta)%6); else if(max===gf) h=60*((bf-rf)/delta+2); else h=60*((rf-gf)/delta+4); }
                 if(h<0) h+=360;
-                document.getElementById('cp-hsl').innerText=`hsl(${Math.round(h)}, ${Math.round(sat*100)}%, ${Math.round(l*100)}%)`;
+                put('hsl', `hsl(${Math.round(h)}, ${Math.round(sat*100)}%, ${Math.round(l*100)}%)`);
                 const k=1-max, c=k===1?0:(1-rf-k)/(1-k), m=k===1?0:(1-gf-k)/(1-k), y=k===1?0:(1-bf-k)/(1-k);
-                document.getElementById('cp-cmyk').innerText=`${Math.round(c*100)}%, ${Math.round(m*100)}%, ${Math.round(y*100)}%, ${Math.round(k*100)}%`;
-                document.getElementById('cp-hsv').innerText=`${Math.round(h)}°, ${Math.round(max===0?0:delta/max*100)}%, ${Math.round(max*100)}%`;
+                put('cmyk', `${Math.round(c*100)}%, ${Math.round(m*100)}%, ${Math.round(y*100)}%, ${Math.round(k*100)}%`);
+                put('hsv', `${Math.round(h)}°, ${Math.round(max===0?0:delta/max*100)}%, ${Math.round(max*100)}%`);
                 const linear = [rf,gf,bf].map(v=>v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4);
                 const lum=0.2126*linear[0]+0.7152*linear[1]+0.0722*linear[2];
-                document.getElementById('cp-luminance').innerText=lum.toFixed(3);
-                document.getElementById('cp-contrast').innerText=lum>0.179?'Black':'White';
+                put('luminance', lum.toFixed(3));
+                put('contrast', lum>0.179?'Black':'White');
                 const comp=`#${[r,g,b].map(v=>Math.round(255-v).toString(16).padStart(2,'0')).join('').toUpperCase()}`;
-                document.getElementById('cp-complement').innerText=comp;
-                document.getElementById('cp-complement-swatch').style.background=comp;
+                put('complement', comp);
+                const swatch=document.getElementById(prefix+'complement-swatch'); if(swatch)swatch.style.background=comp;
             },
 
             // --- Trash / Delete Repair ---
@@ -3918,7 +4284,7 @@ previewHTML() {
             },
 
             exportAllData() {
-                const backup = { format: 'Workbench backup', version: '4.9', exportedAt: new Date().toISOString(), storage: {} };
+                const backup = { format: 'Workbench backup', version: '5.8', exportedAt: new Date().toISOString(), storage: {} };
                 for (let i = 0; i < localStorage.length; i++) {
                     const key = localStorage.key(i);
                     if (key.startsWith('wb_')) backup.storage[key] = localStorage.getItem(key);
@@ -3985,7 +4351,7 @@ previewHTML() {
                     if (!this.qrScanner) this.qrScanner = new Html5Qrcode('qr-reader');
                     await this.stopQRScanner();
                     await this.qrScanner.start(cameraId, { fps: 10, qrbox: { width: 220, height: 220 } },
-                        decoded => { document.getElementById('qr-read-result').textContent = decoded; this.stopQRScanner(); }, () => {});
+                        decoded => { document.getElementById('qr-read-result').textContent = decoded; this.addQRHistory('Scanned', decoded); this.stopQRScanner(); }, () => {});
                 } catch (error) {
                     this.showNotice(`Could not start selected camera: ${error.message || error}. Camera access usually requires HTTPS or localhost.`);
                 }
@@ -4004,7 +4370,7 @@ previewHTML() {
                 try {
                     if (!this.qrScanner) this.qrScanner = new Html5Qrcode('qr-reader');
                     const decoded = await this.qrScanner.scanFile(file, true);
-                    document.getElementById('qr-read-result').textContent = decoded;
+                    document.getElementById('qr-read-result').textContent = decoded; this.addQRHistory('Scanned', decoded);
                 } catch (error) {
                     document.getElementById('qr-read-result').textContent = 'No readable QR code found in this image.';
                 } finally { event.target.value = ''; }
@@ -4016,10 +4382,14 @@ previewHTML() {
                 if (!text) { this.showNotice('Enter text or a URL first.'); return; }
                 if (!window.QRCode) { this.showNotice('QR generator library could not load. Check your internet connection.'); return; }
                 target.innerHTML = '';
-                new QRCode(target, { text, width: 220, height: 220, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+                new QRCode(target, { text, width: 220, height: 220, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H }); this.addQRHistory('Generated', text);
             },
 
-            downloadQR() {
+addQRHistory(action,value) { const list=loadJSON('wb_qr_history',[]);list.unshift({action,value:String(value).slice(0,2000),date:new Date().toISOString()});localStorage.setItem('wb_qr_history',JSON.stringify(list.slice(0,50)));this.renderQRHistory(); },
+            renderQRHistory() { const box=document.getElementById('qr-history-list');if(!box)return;const list=loadJSON('wb_qr_history',[]);box.innerHTML=list.length?list.map(item=>`<div class="flex flex-wrap gap-2 justify-between items-center bg-slate-900 rounded-lg p-2"><div class="min-w-0"><b class="text-cyan-300">${this.escapeHTML(item.action)}</b><p class="text-slate-300 break-all">${this.escapeHTML(item.value)}</p><span class="text-[10px] text-slate-500">${this.escapeHTML(new Date(item.date).toLocaleString())}</span></div></div>`).join(''):'<p class="text-slate-500">No QR activity yet.</p>'; },
+            clearQRHistory() { localStorage.removeItem('wb_qr_history');this.renderQRHistory(); },
+
+                        downloadQR() {
                 const target = document.querySelector('#qr-generated canvas, #qr-generated img');
                 if (!target) { this.showNotice('Generate a QR code first.'); return; }
                 let data;
@@ -4038,7 +4408,7 @@ previewHTML() {
                     { id: 'del-color', label: 'Colors', keys: [] },
                     { id: 'del-finance', label: 'Finance', keys: ['wb_finance','wb_fin_currency'], note: 'Transactions, balance and currency' },
                     { id: 'del-html', label: 'HTML Viewer', keys: [] },
-                    { id: 'del-qr', label: 'QR Code Tool', keys: [] },
+                    { id: 'del-qr', label: 'QR Code Tool', keys: ['wb_qr_history'], note: 'Scan and generation history' },
                     { id: 'del-pass', label: 'Password Generator', keys: ['wb_pass_history'], note: 'Password history' },
                     { id: 'del-pdf', label: 'PDF Toolbox', keys: [] },
                     { id: 'del-random', label: 'Randomizer', keys: ['wb_coin_stats'], note: 'Coin flip statistics' },
@@ -4078,7 +4448,8 @@ previewHTML() {
                     'del-random':['wb_coin_stats'],
                     'del-table':['wb_tables','wb_table_rows','wb_table_cols','wb_current_table'],
                     'del-todo':['wb_todos'],
-                    'del-time':[]
+                    'del-time':['wb_timezone'],
+                    'del-qr':['wb_qr_history']
                 };
                 let selected = false;
                 for (const [id, keys] of Object.entries(mapping)) {
@@ -4087,7 +4458,7 @@ previewHTML() {
                         keys.forEach(key => { if (localStorage.getItem(key) !== null) removedData = true; localStorage.removeItem(key); });
                     }
                 }
-                for (const id of ['del-calc','del-color','del-qr','del-editor']) {
+                for (const id of ['del-calc','del-color','del-editor']) {
                     if (document.getElementById(id)?.checked) selected = true;
                 }
                 if (!selected) { this.showNotice('Select at least one tool.'); return; }
@@ -4185,7 +4556,7 @@ async importExcel(event) {
             });
 
             app.init();
-            document.addEventListener('keydown', event => { if (event.key === 'Escape') { app.closeHelp(); app.closeFormulaLibrary(); } });
+            document.addEventListener('keydown', event => { if (event.key === 'Escape') { app.closeHelp(); app.closeFormulaLibrary(); app.closePeriodicTable(); } });
             app.setLanguage(localStorage.getItem('wb_language') || 'en');
             app.showSection('home');
             app.generateColorPalette();
@@ -4207,7 +4578,7 @@ async importExcel(event) {
                     }
                 });
             };
-            const basicKeys = /[0-9+*\/().\-]/;
+            const basicKeys = /[0-9+*\/().%\-]/;
             bindCalcKeys(basicDisplay, basicKeys, () => app.calculateBasic(), () => app.clearCalc('basic'));
             bindCalcKeys(homeBasicDisplay, basicKeys, () => app.calculateHomeBasic(), () => app.clearHomeCalc());
             bindCalcKeys(sciDisplay, /[0-9+*\/().\-^,a-zA-Z\s]/, () => app.calculateSci(), () => app.clearCalc('sci'));
